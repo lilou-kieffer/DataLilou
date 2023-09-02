@@ -1,0 +1,51 @@
+---
+title: "DataLilou_total"
+author: "Lilou Kieffer"
+date: "2023-08-03"
+output: html_document
+---
+#Chargement DataGuyafor_VOLUMES_total
+```{r}
+#on charge la base de données sur laquelles on va pouvoir appliquer les derniers filtrages afin d'obtenir DataLilou_total
+load(here("Datas", "DataGuyafor_VOLUMES_total.RData"))
+#Afficher DataGuyafor_VOLUMESbis_RESULT
+View(DataGuyafor_VOLUMES_total)
+```
+
+#Chargement "Classi_Ess_Com_finale" pour créer la colonne "Ess_Com"
+```{r}
+library(readxl)
+Classi_Ess_Com_Finale <- read_excel("Classi_Ess_Com_Finale.xlsx")
+View(Classi_Ess_Com_Finale)
+```
+
+#Chargement 'Points_finaux" pour avoir les Idtree qui nous intéressent 
+```{r}
+library(readr)
+Points_finaux <- read_delim("Points_finaux.csv", 
+    delim = ";", escape_double = FALSE, trim_ws = TRUE)
+View(Points_finaux)
+```
+
+#Dernières étapes pour obtenir DataLilou_total
+```{r}
+#on se base sur les idTree présents dans le "Points_finaux"
+Points_finaux = Points_finaux %>% mutate(idTree = as.factor(idTree))
+
+#On joint ces informations à Data_VOLUMES et on crée une nouvelle base qui sera notre data finale : DataLilou_total
+DataLilou_total = inner_join(DataGuyafor_VOLUMES_total, Points_finaux, keep = FALSE, multiple = "first")
+
+```
+
+#On garde seulement les zones défrichables et les essences commerciales
+```{r}
+DataLilou_total <- filter(DataLilou_total, Zone_defrich == "oui")
+DataLilou_total <- filter(DataLilou_total, Ess_Com == "Oui")
+```
+
+
+#Enregistrement de la base de données DataLilou_total
+```{r}
+save(DataLilou_total, file = here ("Datas", "DataLilou_total.RData"))
+```
+

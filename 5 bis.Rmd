@@ -1,0 +1,52 @@
+---
+title: "Création de DataLiloubis"
+author: "Lilou Kieffer"
+date: "2023-05-10"
+output: html_document
+---
+
+#Chargement DataGuyafor_VOLUMESbis
+```{r}
+#on charge la base de données sur laquelles on va pouvoir appliquer les derniers filtrages afin d'obtenir DataLiloubis
+load(here("Datas", "DataGuyafor_VOLUMESbis.RData"))
+#Afficher DataGuyafor_VOLUMESbis_RESULT
+View(DataGuyafor_VOLUMESbis)
+```
+
+#Chargement "Classi_Ess_Com_finale" pour créer la colonne "Ess_Com"
+```{r}
+library(readxl)
+Classi_Ess_Com_Finale <- read_excel("Classi_Ess_Com_Finale.xlsx")
+View(Classi_Ess_Com_Finale)
+```
+
+#Chargement 'Points_finaux" pour avoir les Idtree qui nous intéressent 
+```{r}
+library(readr)
+Points_finaux <- read_delim("Points_finaux.csv", 
+    delim = ";", escape_double = FALSE, trim_ws = TRUE)
+View(Points_finaux)
+```
+
+#Dernières étapes pour obtenir DataLilouBis
+```{r}
+#on se base sur les idTree présents dans le "Points_finaux"
+Points_finaux=Points_finaux %>% mutate(idTree = as.factor(idTree))
+
+#On joint ces informations à Data_VOLUMES et on crée une nouvelle base qui sera notre data finale : DataLiloubis
+DataLiloubis = inner_join(DataGuyafor_VOLUMESbis, Points_finaux, keep = FALSE, multiple = "first")
+
+```
+
+#On garde seulement les zones défrichables et les essences commerciales
+```{r}
+DataLiloubis <- filter(DataLiloubis, Zone_defrich == "oui")
+DataLiloubis <- filter(DataLiloubis, Ess_Com == "Oui")
+```
+
+
+#Enregistrement de la base de données DataLiloubis
+```{r}
+save(DataLiloubis, file = here ("Datas", "DataLiloubis.RData"))
+```
+

@@ -1,0 +1,223 @@
+---
+title: "DataGuyafor_GAPFILLED = Gapfilling de la base de données DataGuyafor - Package
+  Vernabota"
+author: "Lilou Kieffer"
+date: "2023-05-10"
+output:
+pdf_document: default
+html_document: default
+---
+#PARCELLE UNIQUE : Merge entre la colonne Forest et la colonne Plot pour avoir un nom de parcelle unique ForestPlot
+```{r}
+library(tidyverse)
+
+# Conversion en tibble
+DataGuyafor <- DataGuyafor %>% as_tibble()
+
+# Création de la variable ForestPlot
+DataGuyafor <- unite(DataGuyafor, ForestPlot, Forest, Plot, sep = "_", remove = FALSE)
+
+# Afficher les valeurs uniques de ForestPlot
+unique(DataGuyafor$ForestPlot)
+```
+
+#Lecture des packages 
+```{r}
+library(vernabota)
+library(data.table)
+```
+
+
+#Fonction "SimFullCom"
+```{r}
+# Préparation des priors
+data(PriorAllFG_20220126)
+data(PriorParacouNew_20220126)
+data(PriorParacouOld_20220126)
+
+# Préparation des priors
+PriorAllFG <- PrepPrior(PriorAllFG_20220126)
+PriorParacouNew <- PrepPrior(PriorParacouNew_20220126)
+PriorParacouOld <- PrepPrior(PriorParacouOld_20220126)
+
+# Liste des priors
+priors <- list(PriorAllFG, PriorParacouNew, PriorParacouOld)
+```
+
+#CHUNK POUR GAPFILLER 
+```{r}
+##Boucle pour tout
+
+###Paracou 
+DataGuyafor_GAPFILLED = data.table()
+
+uniqnameParacou = DataGuyafor %>% filter(ForestPlot != "Paracou_17(Arbocel)" & Forest == "Paracou") %>% select(ForestPlot) %>% unique() %>% as_vector()
+
+for (i in uniqnameParacou){
+ Data2fill <- as.data.table(DataGuyafor[DataGuyafor$ForestPlot == i,])
+ Data2Gap <- PrepData(Data2fill)
+ DataNSim <- SimFullCom(Data2fill=Data2Gap, 
+                       DataAsso=NULL, 
+                       prior=PriorAllFG, 
+                       wp=0.25, 
+                       NSim=1, 
+                       eps=0.01, 
+                       Determ=TRUE)
+  
+  DataGuyafor_GAPFILLED <- rbind(DataGuyafor_GAPFILLED,DataNSim[[1]])
+
+}
+
+###Bafog
+uniqnameBAFOG = DataGuyafor %>% filter(Forest == "BAFOG") %>% select(ForestPlot) %>% unique() %>% as.vector() %>% as_vector()
+AllBafog <- DataGuyafor[DataGuyafor$Forest == "BAFOG",]
+AllBafog <- PrepData(AllBafog)
+AllBafog <- as.data.table(AllBafog)
+
+for (i in uniqnameBAFOG){
+ Data2fill <- as.data.table(DataGuyafor[DataGuyafor$ForestPlot == i,])
+ Data2Fill <- PrepData(Data2fill)
+  DataNSim <- SimFullCom(Data2fill=Data2Fill, 
+                       DataAsso=AllBafog, 
+                       prior=PriorAllFG, 
+                       wp=0.25, 
+                       NSim=1, 
+                       eps=0.01, 
+                       Determ=TRUE)
+  
+  DataGuyafor_GAPFILLED <- rbind(DataGuyafor_GAPFILLED,DataNSim[[1]])
+
+}
+
+###Paracou_17(Arbocel)
+AllParacou <- DataGuyafor[DataGuyafor$Forest == "Paracou",]
+AllParacou <- PrepData(AllParacou)
+AllParacou <- as.data.table(AllParacou)
+
+Data2Fill <- as.data.table(DataGuyafor[DataGuyafor$ForestPlot == "Paracou_17(Arbocel)",])
+Data2Fill <- PrepData(Data2Fill)
+
+DataNSim <- SimFullCom(Data2fill=Data2Fill, 
+                       DataAsso=AllParacou, 
+                       prior=PriorAllFG, 
+                       wp=0.25, 
+                       NSim=1, 
+                       eps=0.01, 
+                       Determ=TRUE)
+  
+  DataGuyafor_GAPFILLED <- rbind(DataGuyafor_GAPFILLED,DataNSim[[1]])
+  
+###Acarouany_Jahouvey
+Acar <- DataGuyafor[DataGuyafor$ForestPlot == "Acarouany_Javouhey",]
+Acar <- PrepData(Acar)
+Acar <- as.data.table(Acar)
+
+Data2Fill <- as.data.table(DataGuyafor[DataGuyafor$ForestPlot == "Acarouany_Javouhey",])
+Data2Fill <- PrepData(Data2Fill)
+
+DataNSim <- SimFullCom(Data2fill=Data2Fill, 
+                       DataAsso=Acar, 
+                       prior=PriorAllFG, 
+                       wp=0.25, 
+                       NSim=1, 
+                       eps=0.01, 
+                       Determ=TRUE)
+  
+  DataGuyafor_GAPFILLED <- rbind(DataGuyafor_GAPFILLED,DataNSim[[1]])
+
+###Montagne_Plomb_Crique
+Mont <- DataGuyafor[DataGuyafor$ForestPlot == "Montagne_Plomb_Crique_plomb",]
+Mont <- PrepData(Mont)
+Mont <- as.data.table(Mont)
+
+Data2Fill <- as.data.table(DataGuyafor[DataGuyafor$ForestPlot == "Montagne_Plomb_Crique_plomb",])
+Data2Fill <- PrepData(Data2Fill)
+
+DataNSim <- SimFullCom(Data2fill=Data2Fill, 
+                       DataAsso=Mont, 
+                       prior=PriorAllFG, 
+                       wp=0.25, 
+                       NSim=1, 
+                       eps=0.01, 
+                       Determ=TRUE)
+  
+  DataGuyafor_GAPFILLED <- rbind(DataGuyafor_GAPFILLED,DataNSim[[1]])
+  
+###Laussat
+Laussat <- DataGuyafor[DataGuyafor$ForestPlot == "Laussat_Laussat",]
+Laussat <- PrepData(Laussat)
+Laussat <- as.data.table(Laussat)
+
+Data2Fill <- as.data.table(DataGuyafor[DataGuyafor$ForestPlot == "Laussat_Laussat",])
+Data2Fill <- PrepData(Data2Fill)
+
+DataNSim <- SimFullCom(Data2fill=Data2Fill, 
+                       DataAsso=Laussat, 
+                       prior=PriorAllFG, 
+                       wp=0.25, 
+                       NSim=1, 
+                       eps=0.01, 
+                       Determ=TRUE)
+  
+  DataGuyafor_GAPFILLED <- rbind(DataGuyafor_GAPFILLED,DataNSim[[1]])
+  
+
+#Création du chemin d'accès pour enregistrer les bdd créees
+dir.create(here("Datas"), showWarnings = FALSE)
+
+##Sauvegarde de DataGuyafor_GAPFILLED
+save(DataGuyafor_GAPFILLED, file = here("Datas", "DataGuyafor_GAPFILLED.RData"))
+
+
+##Chargement de ma base de données en RData
+load(file = here("Datas", "DataGuyafor_GAPFILLED.RData"))
+
+#test pour voir si il n'y a plus aucune famille indéterminée :le seul cas ou Family== « Indet. » devrait être celui des triples Indet, c’est-à-dire que Family, Genus et Species (les deux derniers après gapfilling donc) sont tous les 3 Indet
+DataGuyafor_GAPFILLED[DataGuyafor_GAPFILLED$Family=="Indet.",] 
+
+
+
+```
+
+##Elimination des arbres morts 
+```{r}
+#on filtre pour garder seulement les arbres qui sont classés comme vivants
+DataGuyafor_GAPFILLED = (filter(DataGuyafor_GAPFILLED, CodeAlive == TRUE))
+```
+
+##Elimination des colonnes inutiles pour moi
+```{r}
+#Retirer toutes les variables inutiles pour moi pour ne pas surcharger la bdd :
+DataGuyafor_GAPFILLED <- DataGuyafor_GAPFILLED %>% select(-c(Protocole, Project, MeasCode, CensusDateCertainty))
+```
+
+#RENOMMER LES COLONNES CREEES PAR LA GAPFILLING
+```{r}
+# Renommer les colonnes Species, Genus et GenSp
+DataGuyafor_GAPFILLED <- DataGuyafor_GAPFILLED %>%
+  rename(SpeciesRaw = Species,
+         GenusRaw = Genus,
+         GenSpRaw = GenSp)
+
+# Scinder la colonne GensSpCor en Genus et Species
+DataGuyafor_GAPFILLED <- separate(
+  data = DataGuyafor_GAPFILLED,
+  col = "GensSpCor",
+  into = c("Genus", "Species"),
+  sep = "-",
+  remove = FALSE, # Conserver la colonne originale
+  convert = FALSE,
+  extra = "merge"
+)
+
+# Renommer la colonne GensSpCor en Nom_Scientifique car c'est notre nouvelle colonne de références avec tous les noms scientifiques actualisés
+DataGuyafor_GAPFILLED <- DataGuyafor_GAPFILLED %>%
+  rename(Nom_Scientifique = GensSpCor)
+
+
+
+#enregistrement de la base de données DataGuyafor_GAPFILLED
+library(here)
+save(DataGuyafor_GAPFILLED, file = here("Datas", "DataGuyafor_GAPFILLED.RData"))
+```
+

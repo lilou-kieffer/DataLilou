@@ -1,0 +1,52 @@
+---
+title: "DataGuyafor_VOLUMES_total = Calculs des Volumes sur DataGuyafor_LCYbis avec le package LoggingLab"
+author: "Lilou Kieffer"
+date: "2023-08-03"
+output: html_document
+---
+#DataGuyafor_VOLUMES_total
+```{r}
+#chargement du package LoggingLab 
+library(LoggingLab)
+
+#Welcome to the LoggingLab package
+# ?LoggingLab
+# ?selected
+# ?addtreedim
+
+#chargement de "DataGuyafor_LCYbis" = la bdd gapfillée et derniers recensements par parcelles 
+
+library(here)
+load(here("Datas", "DataGuyafor_LCYbis.RData"))
+
+#chargement de l'aide de la fonction addtreedim
+?addtreedim
+
+#chargement des packages
+library(tidyverse)
+library(dplyr)
+library(tidyr)
+
+#création de la nouvelle table 
+DataGuyafor_VOLUMES_total <- as.tibble(DataGuyafor_VOLUMES_total)
+
+#colonne DBH
+if (!("DBH" %in% names(DataGuyafor_LCYbis))) {
+   tibble::add_column(DataGuyafor_LCYbis, DBH = NA) #if DBH doesn't exist create it
+   DataGuyafor_LCYbis$DBH = DataGuyafor_LCYbis$CircCorr/pi
+}
+
+DataGuyafor_LCYbis_filtered_total <- dplyr::filter(DataGuyafor_LCYbis, DBH >= 10)
+
+#arguments de la fonction
+DataGuyafor_VOLUMES_total = addtreedim(
+  inventory = DataGuyafor_LCYbis_filtered_total,
+  volumeparameters = ForestZoneVolumeParametersTable,
+  crowndiameterparameters = ParamCrownDiameterAllometry,
+  advancedloggingparameters = loggingparameters()
+)
+
+#enregistrement de la base de données "final" avec les "volumes"
+save(DataGuyafor_VOLUMES_total, file = here("Datas", "DataGuyafor_VOLUMES_total.RData"))
+```
+

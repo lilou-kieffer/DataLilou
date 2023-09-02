@@ -1,0 +1,31 @@
+---
+title: "Calculs des volumes dispo par parcelle avec un DME de 35 cm"
+author: "Lilou Kieffer"
+date: "2023-07-31"
+output: html_document
+---
+
+#chargement de la base de données
+```{r}
+#on crée une autre version de la base de données DataLilou en retirant les DBH inférieurs à 35 cm
+
+```
+
+
+```{r}
+file_path <- file.choose()
+load(file_path)
+
+```
+
+```{r}
+library(here)
+load(here("DataGuyafor_LCY.RData"))
+```
+
+
+```{r}
+library(here)
+load(here("DataGuyafor_LCY.RData"))
+```
+

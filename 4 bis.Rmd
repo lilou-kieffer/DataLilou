@@ -1,0 +1,165 @@
+---
+title: "DataGuyafor_VOLUMESbis = Calculs des Volumes sur DataGuyafor_LCYbis avec le package LoggingLab"
+author: "Lilou Kieffer"
+date: "2023-05-10"
+output: html_document
+---
+
+#Fonction Addtreedim LoggingLab : construction de la bdd DataGuyafor_VOLUMESbis
+```{r}
+#chargement du package
+library(LoggingLab)
+
+#Welcome to the LoggingLab package
+# ?LoggingLab
+# ?selected
+# ?addtreedim
+
+#chargement de "DataGuyafor_LCYbis"
+load(file = here("Datas", "DataGuyafor_LCYbis.RData"))
+
+
+#chargement de l'aide de la fonction addtreedim
+?addtreedim
+
+#chargement des packages
+library(tidyverse)
+library(dplyr)
+library(tidyr)
+
+
+as.tibble(DataGuyafor_LCYbis)
+
+
+#colonne DBH
+if (!("DBH" %in% names(DataGuyafor_LCYbis))) {
+   tibble::add_column(DataGuyafor_LCYbis, DBH = NA) #if DBH doesn't exist create it
+   DataGuyafor_LCYbis$DBH = DataGuyafor_LCYbis$CircCorr/pi} # and calculate it
+DataGuyafor_LCYbis1 <- dplyr::filter(DataGuyafor_LCYbis, DBH >= 55)
+
+
+#arguments de la fonction
+DataGuyafor_VOLUMESbis = addtreedim(
+  inventory = DataGuyafor_LCYbis1,
+  volumeparameters = ForestZoneVolumeParametersTable,
+  crowndiameterparameters = ParamCrownDiameterAllometry,
+  advancedloggingparameters = loggingparameters()
+)
+
+#Volume de bois sur pieds
+#TreeHarvestableVolume_all : AGB / Wooddensity 
+DataGuyafor_VOLUMESbis = DataGuyafor_VOLUMESbis %>% mutate (TreeHarvestableVolume_all = AGB / WoodDensity)
+
+#Poids de grume
+#AGB_grume : TreeHarvestableVolume x Density (t)
+DataGuyafor_VOLUMESbis = DataGuyafor_VOLUMESbis %>% mutate(AGB_grume = TreeHarvestableVolume*WoodDensity)
+
+
+#Création d'une colonne qui va nous donner les volumes de bois en m3 par hectare sur pieds en ha pour tous les arbres
+DataGuyafor_VOLUMESbis = DataGuyafor_VOLUMESbis %>% mutate(TreeHarvestableVolume_all_ha = TreeHarvestableVolume_all /PlotArea) 
+
+#On crée une colonne qui va nous donner les volumes en ha pour tous les arbres de la bdd, en prenant chaque Idtree, le nom de sa parcelle, et la PlotArea qui lui correspond !
+DataGuyafor_VOLUMESbis = DataGuyafor_VOLUMESbis %>% mutate(TreeHarvestableVolume_ha = TreeHarvestableVolume / PlotArea)
+
+#On ajoute la colonne PlotArea_defrich
+DataGuyafor_VOLUMESbis <- left_join(DataGuyafor_VOLUMESbis, Surface_defrichable, by = "ForestPlot")
+
+
+#On crée une colonne pour avoir les volumes par hectare de parcelle défrichable seulement
+DataGuyafor_VOLUMESbis = DataGuyafor_VOLUMESbis %>% mutate(TreeHarvestableVolume_defrich_ha = TreeHarvestableVolume / PlotArea_bis)
+
+# Filtrer les données en excluant les "Paracou_17(Arbocel)" car on ne veut pas étudier les volumes sur cette parcelle
+
+DataGuyafor_VOLUMESbis <- DataGuyafor_VOLUMESbis %>%
+  filter(ForestPlot != "Paracou_17(Arbocel)" & ForestPlot != "BAFOG_VI" & ForestPlot != "BAFOG_VII")
+
+
+
+# Effectuer la jointure et créer la nouvelle variable "Ess_Com"
+DataGuyafor_VOLUMESbis <- DataGuyafor_VOLUMESbis %>%
+  mutate(Ess_Com = ifelse(Nom_Scientifique %in% Classi_Ess_Com_Finale$Nom_Scientifique, "Oui", "Non"))%>%
+left_join(Classi_Ess_Com_Finale %>% select(Nom_Scientifique, Classe_Emploi, Classe_commerciale, Classe_resistance_meca, Densite, Bois_ronds, Dureté, DME), by = "Nom_Scientifique")
+
+#enregistrement de la base de données "DataGuyafor_VOLUMESbis"
+save(DataGuyafor_VOLUMESbis, file = here ("Datas", "DataGuyafor_VOLUMESbis.RData"))
+```
+
+
+#VERSION AVEC LE DBH à 5 CM DE DIAMETRE DANS LE CADRE D'UNE DEFRICHE TOTALE ON GARDE TOUS LES ARBRES 
+```{r}
+#chargement du package
+library(LoggingLab)
+
+#Welcome to the LoggingLab package
+# ?LoggingLab
+# ?selected
+# ?addtreedim
+
+#chargement de "DataGuyafor_LCYbis"
+load(file = here("Datas", "DataGuyafor_LCYbis.RData"))
+
+
+#chargement de l'aide de la fonction addtreedim
+?addtreedim
+
+#chargement des packages
+library(tidyverse)
+library(dplyr)
+library(tidyr)
+
+
+as.tibble(DataGuyafor_LCYbis)
+
+
+#colonne DBH
+if (!("DBH" %in% names(DataGuyafor_LCYbis))) {
+   tibble::add_column(DataGuyafor_LCYbis, DBH = NA) #if DBH doesn't exist create it
+   DataGuyafor_LCYbis$DBH = DataGuyafor_LCYbis$CircCorr/pi} # and calculate it
+DataGuyafor_LCYbis2 <- dplyr::filter(DataGuyafor_LCYbis, DBH >= 10)
+
+
+#arguments de la fonction
+DataGuyafor_VOLUMES_totalbis = addtreedim(
+  inventory = DataGuyafor_LCYbis2,
+  volumeparameters = ForestZoneVolumeParametersTable,
+  crowndiameterparameters = ParamCrownDiameterAllometry,
+  advancedloggingparameters = loggingparameters()
+)
+
+#Volume de bois sur pieds
+#TreeHarvestableVolume_all : AGB / Wooddensity 
+DataGuyafor_VOLUMES_totalbis = DataGuyafor_VOLUMES_totalbis %>% mutate (TreeHarvestableVolume_all = AGB / WoodDensity)
+
+#Poids de grume
+#AGB_grume : TreeHarvestableVolume x Density (t)
+DataGuyafor_VOLUMES_totalbis = DataGuyafor_VOLUMES_totalbis %>% mutate(AGB_grume = TreeHarvestableVolume*WoodDensity)
+
+
+#Création d'une colonne qui va nous donner les volumes de bois en m3 par hectare sur pieds en ha pour tous les arbres
+DataGuyafor_VOLUMES_totalbis = DataGuyafor_VOLUMES_totalbis %>% mutate(TreeHarvestableVolume_all_ha = TreeHarvestableVolume_all /PlotArea) 
+
+#On crée une colonne qui va nous donner les volumes en ha pour tous les arbres de la bdd, en prenant chaque Idtree, le nom de sa parcelle, et la PlotArea qui lui correspond !
+DataGuyafor_VOLUMES_totalbis = DataGuyafor_VOLUMES_totalbis %>% mutate(TreeHarvestableVolume_ha = TreeHarvestableVolume / PlotArea)
+
+#On ajoute la colonne PlotArea_defrich
+DataGuyafor_VOLUMES_totalbis <- left_join(DataGuyafor_VOLUMES_totalbis, Surface_defrichable, by = "ForestPlot")
+
+
+#On crée une colonne pour avoir les volumes par hectare de parcelle défrichable seulement
+DataGuyafor_VOLUMES_totalbis = DataGuyafor_VOLUMES_totalbis %>% mutate(TreeHarvestableVolume_defrich_ha = TreeHarvestableVolume / PlotArea_bis)
+
+# Filtrer les données en excluant les "Paracou_17(Arbocel)" car on ne veut pas étudier les volumes sur cette parcelle
+
+DataGuyafor_VOLUMES_totalbis <- DataGuyafor_VOLUMES_totalbis %>%
+  filter(ForestPlot != "Paracou_17(Arbocel)" & ForestPlot != "BAFOG_VI" & ForestPlot != "BAFOG_VII")
+
+
+# Effectuer la jointure et créer la nouvelle variable "Ess_Com"
+DataGuyafor_VOLUMES_totalbis <- DataGuyafor_VOLUMES_totalbis %>%
+  mutate(Ess_Com = ifelse(Nom_Scientifique %in% Classi_Ess_Com_Finale$Nom_Scientifique, "Oui", "Non"))%>%
+left_join(Classi_Ess_Com_Finale %>% select(Nom_Scientifique, Classe_Emploi, Classe_commerciale, Classe_resistance_meca, Densite, Bois_ronds, Dureté, DME), by = "Nom_Scientifique")
+
+#enregistrement de la base de données "DataGuyafor_VOLUMES_total"
+save(DataGuyafor_VOLUMES_totalbis, file = here ("Datas", "DataGuyafor_VOLUMES_totalbis.RData"))
+```
+

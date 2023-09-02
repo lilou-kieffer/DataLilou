@@ -1,0 +1,80 @@
+---
+title: "Construction de DataGuyafor_LCY"
+author: "Lilou Kieffer"
+date: "2023-05-10"
+output:
+  word_document: default
+  latex_engine: xelatex
+  keep_tex: yes
+  pandoc_args: null
+  pdf_document: null
+  html_document: default
+---
+
+#FILTRES 
+
+##BASE DE DONNEES DataGuyafor_LCY : LAST CENSUS YEAR 
+###Chargement de la bdd DataGuyafor_GAPFILLED
+```{r}
+#Tout d'abord il faut charger la base de données DataGuyafor_GAPFILLED qui va nous servir à créer la prochaine 
+load(file = here("Datas", "DataGuyafor_GAPFILLED.RData"))
+```
+
+##CODE POUR GARDER LA DERNIERE ANNEE DE RECENSEMENT PARTOUT 
+```{r}
+# unique_LCY = DataGuyafor_GAPFILLED %>% filter (CensusYear) %>% select(ForestPlot == i) %>% unique() %>% arrange (date, Censusyear) 
+
+# i <- DataGuyafor_GAPFILLED$ForestPlot
+
+unique_annesforet = tibble() #création d'un tibble avec toutes les années de recensement unique
+
+unique_forest = DataGuyafor_GAPFILLED$ForestPlot %>% unique() #on fait un unique des forêts 
+
+for (i in unique_forest) {
+ind = DataGuyafor_GAPFILLED %>% filter(ForestPlot == i) %>% arrange(CensusYear) %>% slice_tail(n=1) %>% select(CensusYear,ForestPlot)
+
+unique_annesforet = bind_rows(unique_annesforet, ind)
+   
+} #cette boucle permet de garder la dernière années de recensement pour chaque forêt
+
+unique_annesforet = unique_annesforet %>% mutate(CensusYear = as.factor(CensusYear)) #on vérifie dans la table, on a bien la dernière année pour chacune des 27 parcelles 
+
+#Création de la bbd DataGuyafor_LCY
+DataGuyafor_LCY = tibble()
+for( i in 1:nrow(unique_annesforet)){
+    
+patate = DataGuyafor_GAPFILLED %>% filter(ForestPlot ==  unique_annesforet$ForestPlot[i] ,
+                                          CensusYear == unique_annesforet$CensusYear[i] )
+DataGuyafor_LCY = bind_rows(DataGuyafor_LCY,patate)
+  
+} #on récupère toutes les informations de la base de données DataGuyafor_GAPFILLED qu'on va fusionner avec juste nos lignes d'intérêt grâce à la table créée et on obtient donc une nouvelle base de données : DataGuyafor_LCY 
+
+#vérification que tout est en une fois dans la nouvelle base de données 
+patate_2 <- DataGuyafor_LCY %>% select(ForestPlot,CensusYear) %>% unique()
+
+```
+
+
+##CREATION DE LA COLONNE EXPLOITATION 
+###DataGuyafor_LCY
+```{r}
+##Création d'une variable parcelle exploitée ou non
+##[dplyr] Créer une variable avec une condition
+
+#Parcelles exploitées
+a = DataGuyafor_LCY %>% filter(ForestPlot %in% c("BAFOG_II",	"BAFOG_III",	"BAFOG_IV",	"BAFOG_VI",	"Paracou_12",	"Paracou_17_(Arbocel)",	"Paracou_2",	"Paracou_3",	"Paracou_4",	"Paracou_5",	"Paracou_7",	"Paracou_8",	"Paracou_10",	"Paracou_9")) %>% mutate(Exploitation = "exploitée")
+
+
+#Parcelles non exploitées
+b = DataGuyafor_LCY %>% filter(!ForestPlot %in% c("BAFOG_II",	"BAFOG_III",	"BAFOG_IV",	"BAFOG_VI",	"Paracou_12",	"Paracou_17_(Arbocel)",	"Paracou_2",	"Paracou_3",	"Paracou_4",	"Paracou_5",	"Paracou_7",	"Paracou_8",	"Paracou_10",	"Paracou_9")) %>% mutate(Exploitation = "non exploitée")
+
+DataGuyafor_LCY = bind_rows(a,b)
+```
+
+##ENREGISTREMENT de la BDD DataGuyafor_LCY
+```{r}
+#enregistrement de la base de données DataGuyafor_LCY
+save(DataGuyafor_LCY, file = here ("Datas", "DataGuyafor_LCY.RData"))
+```
+
+

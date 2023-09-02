@@ -1,0 +1,61 @@
+---
+title: "Chargement de la base de données DataGuyafor"
+author: "Lilou Kieffer"
+date: "2023-05-10"
+output:
+pdf_document: default
+html_document: default
+---
+
+#Chargement de la base de données Guyafor
+```{r}
+# Charger le package EcoFog
+library(EcoFoG)
+
+# Identifiant et mot de passe pour la connexion à la base de données
+DataGuyafor <- Guyafor2df(UID = "Lilou.Kieffer", PWD = "lilou973+")
+
+# Afficher la base de données Guyafor
+View(DataGuyafor)
+
+# Charger le package tidyverse avant d'utiliser les fonctions
+library(tidyverse)
+
+# Convertir en tibble
+DataGuyafor <- as_tibble(DataGuyafor)
+```
+
+#Lecture des packages
+```{r}
+# Charger les packages nécessaires
+library(tidyverse)
+library(rmarkdown)
+library(dplyr)
+library(tidyr)
+library(tibble)
+```
+
+#Lecture des fonctions 
+```{r}
+# # Couper les lignes de notre choix
+# slice(data, 1:10)
+# 
+# # Afficher la structure de notre data
+# str(data)
+# 
+# # Révéler les valeurs uniques de la base de données
+# unique(data)
+# 
+# # Afficher les différents niveaux de la base
+# levels(data)
+# 
+# # Dimensions de la base
+# dim(data)
+# 
+# # Taille de la base (nombre de lignes)
+# nrow(data)
+# 
+# # Résumé de la base
+# summary(data)
+```
+

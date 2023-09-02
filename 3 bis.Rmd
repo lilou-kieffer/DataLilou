@@ -1,0 +1,158 @@
+---
+title: "Construction de DataGuyafor_LCYbis"
+author: "Lilou Kieffer"
+date: "2023-06-21"
+output: html_document
+---
+
+
+#FILTRES 
+##BASE DE DONNEES DataGuyafor_LCYbis : LAST CENSUS YEAR BIS
+###Chargement de la bdd DataGuyafor_GAPFILLED
+```{r}
+#Tout d'abord il faut charger la base de données DataGuyafor_GAPFILLED qui va nous servir à créer la prochaine 
+load(file = here("Datas", "DataGuyafor_GAPFILLED.RData"))
+```
+
+##CODE POUR GARDER LES ANNEES DE RECENSEMENT QUI NOUS INTERESSE
+###Nom de cette bdd modifiée = DataGuyafor_LCYbis
+```{r}
+#Création d'une nouvelle version de DataGuyafor (avec les années de recensement qui nous intéresse pour les parcelles exploitées)
+
+DataGuyafor_LCYbis = tibble()
+
+### CODE 1 : qui permet de garder la dernière année de recensement pour chaque parcelle non exploitée de DataGuyafor
+#### Pour les parcelles non exploitées : on garde que la dernière année
+
+
+#PARCELLES NON EXPLOITEES 
+#afficher les parcelles non exploitées
+unique_LCY_nonexp = DataGuyafor_GAPFILLED %>% filter(ForestPlot %in% c("Acarouany_Javouhey","Paracou_6", "Paracou_16", "Paracou_15", "Paracou_14","Paracou_13", "Paracou_11", "Paracou_1", "Montagne_Plomb_Crique_plomb", "Laussat_Laussat", "BAFOG_VII", "BAFOG_V", "BAFOG_I")) %>% select (ForestPlot, CensusYear) %>% unique() 
+
+View(unique_LCY_nonexp)
+
+DataGuyafor_LCYbis = bind_rows(DataGuyafor_LCYbis, DataGuyafor_GAPFILLED %>% filter(CensusYear == "2019", ForestPlot == "Acarouany_Javouhey"))
+
+DataGuyafor_LCYbis = bind_rows(DataGuyafor_LCYbis, DataGuyafor_GAPFILLED %>% filter(CensusYear == "2022", ForestPlot == "Paracou_6"))
+
+DataGuyafor_LCYbis = bind_rows(DataGuyafor_LCYbis, DataGuyafor_GAPFILLED %>% filter(CensusYear == "2020", ForestPlot == "Paracou_16"))
+
+DataGuyafor_LCYbis = bind_rows(DataGuyafor_LCYbis, DataGuyafor_GAPFILLED %>% filter(CensusYear == "2022", ForestPlot == "Paracou_15"))
+
+DataGuyafor_LCYbis = bind_rows(DataGuyafor_LCYbis, DataGuyafor_GAPFILLED %>% filter(CensusYear == "2022", ForestPlot == "Paracou_14"))
+
+DataGuyafor_LCYbis = bind_rows(DataGuyafor_LCYbis, DataGuyafor_GAPFILLED %>% filter(CensusYear == "2022", ForestPlot == "Paracou_13"))
+
+DataGuyafor_LCYbis = bind_rows(DataGuyafor_LCYbis, DataGuyafor_GAPFILLED %>% filter(CensusYear == "2022", ForestPlot == "Paracou_11"))
+
+DataGuyafor_LCYbisbis = bind_rows(DataGuyafor_LCYbis, DataGuyafor_GAPFILLED %>% filter(CensusYear == "2022", ForestPlot == "Paracou_1"))
+
+DataGuyafor_LCYbis = bind_rows(DataGuyafor_LCYbis, DataGuyafor_GAPFILLED %>% filter(CensusYear == "2021", ForestPlot == "Montagne_Plomb_Crique_plomb"))
+
+DataGuyafor_LCYbis = bind_rows(DataGuyafor_LCYbis, DataGuyafor_GAPFILLED %>% filter(CensusYear == "2019", ForestPlot == "Laussat_Laussat"))
+
+DataGuyafor_LCYbis = bind_rows(DataGuyafor_LCYbis, DataGuyafor_GAPFILLED %>% filter(CensusYear == "2014", ForestPlot == "BAFOG_VII"))
+
+DataGuyafor_LCYbis = bind_rows(DataGuyafor_LCYbis, DataGuyafor_GAPFILLED %>% filter(CensusYear %in% c("2012"), ForestPlot == "BAFOG_V"))
+
+DataGuyafor_LCYbis = bind_rows(DataGuyafor_LCYbis, DataGuyafor_GAPFILLED %>% filter(CensusYear %in% c("2008"), ForestPlot == "BAFOG_I"))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#PARCELLES EXPLOITEES 
+### CODE 2 : Derniers recensement pour les parcelles exploitées et trois années différents pour les parcelles exploitées 
+#### Ensuite au cas par cas pour les parcelles exploitées : 
+#afficher les parcelles les années pour les parcelles exploitées
+unique_LCY_exp = DataGuyafor_GAPFILLED %>% filter(ForestPlot %in% c("BAFOG_II","BAFOG_III","BAFOG_IV","Paracou_12","Paracou_2","Paracou_3","Paracou_4","Paracou_5","Paracou_7","Paracou_8","Paracou_9","Paracou_10")) %>% select (ForestPlot, CensusYear) %>% unique() 
+
+# - BAFOG_II,	1968, 1991, 2013
+
+DataGuyafor_LCYbis = bind_rows(DataGuyafor_LCYbis, DataGuyafor_GAPFILLED %>% filter(CensusYear %in% c("1968", "2000", "2013"), ForestPlot == "BAFOG_II"))
+
+# - BAFOG_III, 1968, 1988, 2016
+
+DataGuyafor_LCYbis = bind_rows(DataGuyafor_LCYbis, DataGuyafor_GAPFILLED %>% filter(CensusYear %in% c("1968", "2002", "2016"), ForestPlot == "BAFOG_III"))
+
+# - BAFOG_IV,	1968, 1993, 2015
+
+DataGuyafor_LCYbis = bind_rows(DataGuyafor_LCYbis, DataGuyafor_GAPFILLED %>% filter(CensusYear %in% c("1968", "2001", "2015"), ForestPlot == "BAFOG_IV")) 
+
+# - BAFOG_VI,	2006, 2010, 2017
+
+DataGuyafor_LCYbis = bind_rows(DataGuyafor_LCYbis, DataGuyafor_GAPFILLED %>% filter(CensusYear %in% c("2006", "2010", "2017"), ForestPlot == "BAFOG_VI"))
+
+# - Paracou_17_(Arbocel),	1989, 2003, 2021
+
+DataGuyafor_LCYbis = bind_rows(DataGuyafor_LCYbis, DataGuyafor_GAPFILLED %>% filter(CensusYear %in% c("1989", "2003", "2021"), ForestPlot == "Paracou_17_(Arbocel)"))
+
+
+# - Paracou_12,	1984, 2001, 2021
+# - Paracou_2, 1984, 2001, 2021	
+# - Paracou_3, 1984, 2001, 2021		
+# - Paracou_4, 1984, 2001, 2021		
+# - Paracou_5, 1984, 2001, 2021	
+# - Paracou_7, 	1984, 2001, 2021	
+# - Paracou_8,	1984, 2001, 2021	
+# - Paracou_10,	1984, 2001, 2021	
+# - Paracou_9,  1984, 2001, 2021	
+
+
+#les trois mêmes années pour Paracou 
+
+DataGuyafor_LCYbis = bind_rows(DataGuyafor_LCYbis, DataGuyafor_GAPFILLED %>% filter(CensusYear %in% c("1984", "1988", "2021"), ForestPlot == "Paracou_12"))
+                                                                                                    DataGuyafor_LCYbis = bind_rows(DataGuyafor_LCYbis, DataGuyafor_GAPFILLED %>% filter(CensusYear %in% c("1984", "1988", "2021"), ForestPlot == "Paracou_2"))
+                                                                                                            
+                                                                                                    DataGuyafor_LCYbis = bind_rows(DataGuyafor_LCYbis, DataGuyafor_GAPFILLED %>% filter(CensusYear %in% c("1984", "1988", "2021"), ForestPlot == "Paracou_3"))
+                                                                                                        
+DataGuyafor_LCYbis = bind_rows(DataGuyafor_LCYbis, DataGuyafor_GAPFILLED %>% filter(CensusYear %in% c("1984", "1988", "2021"), ForestPlot == "Paracou_4"))                                                                                                           
+                                                                                                            
+DataGuyafor_LCYbis = bind_rows(DataGuyafor_LCYbis, DataGuyafor_GAPFILLED %>% filter(CensusYear %in% c("1984", "1988", "2021"), ForestPlot == "Paracou_5"))                                                                                                            
+                                                                                                            
+DataGuyafor_LCYbis = bind_rows(DataGuyafor_LCYbis, DataGuyafor_GAPFILLED %>% filter(CensusYear %in% c("1984", "1988", "2021"), ForestPlot == "Paracou_7"))
+
+
+DataGuyafor_LCYbis = bind_rows(DataGuyafor_LCYbis, DataGuyafor_GAPFILLED %>% filter(CensusYear %in% c("1984", "1988", "2021"), ForestPlot == "Paracou_8"))
+
+
+DataGuyafor_LCYbis = bind_rows(DataGuyafor_LCYbis, DataGuyafor_GAPFILLED %>% filter(CensusYear %in% c("1984", "1988", "2021"), ForestPlot == "Paracou_9"))
+
+
+DataGuyafor_LCYbis = bind_rows(DataGuyafor_LCYbis, DataGuyafor_GAPFILLED %>% filter(CensusYear %in% c("1984", "1988", "2021"), ForestPlot == "Paracou_10"))
+
+```
+
+
+
+##CREATION DE LA COLONNE EXPLOITATION 
+###DataGuyafor_LCYbis
+```{r}
+# Filtrer les lignes pour ajouter la colonne "Exploitation"
+DataGuyafor_LCYbis <- DataGuyafor_LCYbis %>%
+  mutate(Exploitation = case_when(
+    ForestPlot %in% c("BAFOG_II", "BAFOG_III", "BAFOG_IV", "BAFOG_VI", "Paracou_12", "Paracou_17_(Arbocel)", "Paracou_2", "Paracou_3", "Paracou_4", "Paracou_5", "Paracou_7", "Paracou_8", "Paracou_10", "Paracou_9") ~ "exploitée",
+    TRUE ~ "non exploitée"
+  ))
+
+#c = DataGuyafor_LCYbis %>% filter(ForestPlot %in% c("BAFOG_II",	"BAFOG_III",	"BAFOG_IV",	"BAFOG_VI",	"Paracou_12",	"Paracou_17_(Arbocel)",	"Paracou_2",	"Paracou_3",	"Paracou_4",	"Paracou_5",	"Paracou_7",	"Paracou_8",	"Paracou_10",	"Paracou_9")) %>% mutate(Exploitation = "exploitée")
+
+#d = DataGuyafor_LCYbis %>% filter(!ForestPlot %in% c("BAFOG_II",	"BAFOG_III",	"BAFOG_IV",	"BAFOG_VI",	"Paracou_12",	"Paracou_17_(Arbocel)",	"Paracou_2",	"Paracou_3",	"Paracou_4",	"Paracou_5",	"Paracou_7",	"Paracou_8",	"Paracou_10",	"Paracou_9")) %>% mutate(Exploitation = "non exploitée")
+
+#DataGuyafor_LCYbis = bind_rows(a,b)
+```
+
+##ENREGISTREMENT de la BDD DataGuyafor_LCYbis
+```{r}
+#enregistrement de la base de données DataGuyafor_LCYbis_final 
+save(DataGuyafor_LCYbis, file = here ("Datas", "DataGuyafor_LCYbis.RData"))
+```

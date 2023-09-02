@@ -1,0 +1,28 @@
+---
+title: "SIG"
+author: "Lilou Kieffer"
+date: "2023-06-19"
+output: html_document
+---
+
+#CODES POUR EXTRAIRE LA DATA SOUS FORME DE TABLEAU EXCEL QUI SERA IMPORTABLE DANS QGIS 
+```{r}
+## Exportation des coordonnées UTM pour QGIS 
+Mes_coordo_UTM <- DataGuyafor_VOLUMES_total[, c(1, 2, 10, 11)]
+write.csv(Mes_coordo_UTM, file = "Coordonnees_UTM.csv")
+```
+
+
+#Subset pour extraire mes coordonnée d'arbres pour la carte (SIG)
+```{r}
+#j'extrais mes colonnes d'intérêt
+Mes_coordo = subset(DataGuyafor_LCY, select = c (idTree, ForestPlot, Lat, Lon))
+
+#on prend les UTM c'est mieux
+Mes_coordo_UTM = subset(DataGuyafor_LCY, select = c (idTree, ForestPlot, Xutm, Yutm))
+
+#créer un tableau excel, fichier csv exploitable dans ArcGis
+
+write.csv(Mes_coordo_UTM, file = "Coordonnees_UTM.csv")
+read.csv("Coordonnees_UTM.csv")
+```

@@ -1,0 +1,1484 @@
+---
+title: "Graphes avec ggplot 2"
+author: "Lilou Kieffer"
+date: "2023-05-11"
+output: html_document
+---
+
+
+#LECTURE DU PACKAGE GGPLOT 2
+```{r}
+library(ggplot2)
+?ggplot2
+```
+
+#RESULTATS MEMOIRE 
+
+#Volumes totaux de grume disponibles sur chaque forêt pour savoir avec quel volume d'arbre on travaille au total (pas ramené à l'hectare)
+```{r}
+# Charger les bibliothèques
+library(ggplot2)
+
+# Charger les données depuis votre base de données
+data1 <- DataGuyafor_VOLUMES_total
+
+# Calculer les volumes totaux par forêt
+total_volumes <- data1 %>% group_by(Forest) %>% summarize(TotalVolume = sum(TreeHarvestableVolume))
+
+# Arrondir les volumes totaux à 0 chiffre après la virgule
+total_volumes$TotalVolume <- round(total_volumes$TotalVolume, digits = 0)
+
+# Créer le graphique à barres avec les étiquettes d'axe des ordonnées tous les 1000
+ggplot(total_volumes, aes(x = Forest, y = TotalVolume)) +
+  geom_bar(stat = "identity", fill = "green") +
+  geom_text(aes(label = TotalVolume), vjust = -0.3, color = "black") +
+  labs(title = "Volumes totaux de grumes en m3 disponibles sur l'entièreté de chaque forêt d'étude ",
+       x = "Forêt",
+       y = "Volumes en m3 sur la surface totale de la forêt") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_y_continuous(expand = expansion(add = c(0, 0.1)),
+                     breaks = seq(0, ceiling(max(total_volumes$TotalVolume)), by = 1000),
+                     labels = scales::comma_format(scale = 1, big.mark = ""))
+
+```
+
+
+#Volumes totaux de grume disponibles sur chaque parcelle pour savoir avec quel volume d'arbre on travaille au total (pas ramené à l'hectare)
+```{r}
+# Charger les bibliothèques
+library(ggplot2)
+
+# Charger les données depuis votre base de données
+data1 <- DataGuyafor_VOLUMES_total
+
+# Calculer les volumes totaux par forêt
+total_volumes_parcelles <- data1 %>% group_by(ForestPlot) %>% summarize(TotalVolumeParcelle = sum(TreeHarvestableVolume))
+
+# Arrondir les volumes totaux à 0 chiffre après la virgule
+total_volumes_parcelles$TotalVolumeParcelle <- round(total_volumes_parcelles$TotalVolumeParcelle, digits = 0)
+
+# Créer le graphique à barres avec les étiquettes d'axe des ordonnées tous les 1000
+ggplot(total_volumes_parcelles, aes(x = ForestPlot, y = TotalVolumeParcelle)) +
+  geom_bar(stat = "identity", fill = "green") +
+  geom_text(aes(label = TotalVolumeParcelle), vjust = -0.3, color = "black") +
+  labs(title = "Volumes totaux de grumes en m3 disponibles sur l'entièreté de chaque parcelle d'étude ",
+       x = "Forêt",
+       y = "Volumes en m3") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_y_continuous(expand = expansion(add = c(0, 0.1)),
+                     breaks = seq(0, ceiling(max(total_volumes_parcelles$TotalVolumeParcelle)) + 1000, by = 500),
+                     labels = scales::comma_format(scale = 1, big.mark = "")) +
+   coord_cartesian(ylim = c(0, ceiling(max(total_volumes_parcelles$TotalVolumeParcelle)) + 1000))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#Volumes totaux de grume disponibles sur chaque parcelle pour savoir avec quel volume d'arbre on travaille au total
+```{r}
+# Charger les bibliothèques
+library(ggplot2)
+
+# Charger les données depuis votre base de données
+data5 <- DataGuyafor_VOLUMES_total
+
+# Calculer les volumes totaux par forêt
+total_volumes_parcelles <- data5 %>% group_by(ForestPlot) %>% summarize(TotalVolume = sum(TreeHarvestableVolume))
+
+# Arrondir les volumes totaux à 0 chiffre après la virgule
+total_volumes_parcelles$TotalVolume <- round(total_volumes_parcelles$TotalVolume, digits = 0)
+
+# Créer le graphique à barres avec les étiquettes d'axe des ordonnées tous les 1000
+ggplot(total_volumes_parcelles, aes(x = ForestPlot, y = TotalVolume)) +
+  geom_bar(stat = "identity", fill = "green") +
+  geom_text(aes(label = TotalVolume), vjust = -0.3, color = "black") +
+  labs(title = "Volumes totaux de grumes en m3 disponibles sur l'entièreté de la surface de chaque forêt d'étude ",
+       x = "Parcelle",
+       y = "Volumes en m3 sur la surface totale de la parcelle") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_y_continuous(expand = expansion(add = c(0, 0.1)),
+                     breaks = seq(0, ceiling(max(total_volumes_parcelles$TotalVolume)), by = 1000),
+                     labels = scales::comma_format(scale = 1, big.mark = ""))
+```
+
+#Volumes de bois sur pieds sur chaque parcelle en m3 par hectare dans le cas d'une défriche totale de la parcelle (tous les arbres à partir de 10 cm de diamètre sont pris en compte)
+```{r}
+library(dplyr)
+library(ggplot2)
+
+# Charger les données depuis votre base de données
+data2 <- DataGuyafor_VOLUMES_total 
+
+# Calculer les volumes par hectare par parcelle
+volumes_parcelles_bois_pieds <- data2 %>% 
+  group_by(ForestPlot) %>% 
+  summarize(VolumeParHectare = sum(TreeHarvestableVolume_all_ha))
+
+# Arrondir les volumes par hectare à 0 chiffre après la virgule
+volumes_parcelles_bois_pieds$VolumeParHectare <- round(volumes_parcelles_bois_pieds$VolumeParHectare, digits = 0)
+
+# Créer le graphique à barres avec les étiquettes d'axe des ordonnées tous les 1000
+ggplot(volumes_parcelles_bois_pieds, aes(x = ForestPlot, y = VolumeParHectare)) +
+  geom_bar(stat = "identity", fill = "green") +
+  geom_text(aes(label = VolumeParHectare), vjust = -0.3, color = "black") +
+  labs(title = "Volume de bois sur pieds disponible en m3 par hectare pour chaque parcelle d'étude",
+       x = "Parcelle",
+       y = "Volume en m3/ha") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  scale_y_continuous(breaks = scales::pretty_breaks(n = 10))  # Ajustement des intervalles de l'axe des ordonnées
+
+```
+
+
+#Volumes de grume disponible sur chaque parcelle en m3 par hectare dans le cas d'une défriche totale de la parcelle (tous les arbres à partir de 10 cm de diamètre sont pris en compte)
+```{r}
+library(dplyr)
+library(ggplot2)
+
+# Charger les données depuis votre base de données
+data2 <- DataGuyafor_VOLUMES_total 
+
+# Calculer les volumes par hectare par parcelle
+volumes_parcelles_bois_grume <- data2 %>% 
+  group_by(ForestPlot) %>% 
+  summarize(VolumeParHectare = sum(TreeHarvestableVolume_ha))
+
+# Arrondir les volumes par hectare à 0 chiffre après la virgule
+volumes_parcelles_bois_grume$VolumeParHectare <- round(volumes_parcelles_bois_grume$VolumeParHectare, digits = 0)
+
+# Créer le graphique à barres avec les étiquettes d'axe des ordonnées tous les 1000
+ggplot(volumes_parcelles_bois_grume, aes(x = ForestPlot, y = VolumeParHectare)) +
+  geom_bar(stat = "identity", fill = "green4") +
+  geom_text(aes(label = VolumeParHectare), vjust = -0.3, color = "black") +
+  labs(title = "Volume de grume disponible en m3 par hectare pour chaque parcelle d'étude",
+       x = "Parcelle",
+       y = "Volume en m3/ha") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  scale_y_continuous(breaks = scales::pretty_breaks(n = 10))  # Ajustement des intervalles de l'axe des ordonnées
+
+
+
+
+```
+#Comparaison des deux volumes 
+```{r}
+
+library(dplyr)
+library(ggplot2)
+
+# Calculer les volumes par hectare par parcelle pour le bois sur pieds
+volumes_parcelles_bois_pieds <- data2 %>% 
+  group_by(ForestPlot) %>% 
+  summarize(VolumeBoisPieds = sum(TreeHarvestableVolume_all_ha))
+
+# Calculer les volumes par hectare par parcelle pour le volume de grume
+volumes_parcelles_bois_grume <- data2 %>% 
+  group_by(ForestPlot) %>% 
+  summarize(VolumeGrume = sum(TreeHarvestableVolume_ha))
+
+# Fusionner les deux jeux de données
+volumes_parcelles <- inner_join(volumes_parcelles_bois_pieds, volumes_parcelles_bois_grume, by = "ForestPlot")
+
+# Calculer les pourcentages
+volumes_parcelles <- volumes_parcelles %>%
+  mutate(Percentage = round((VolumeGrume / VolumeBoisPieds) * 100))
+
+# Créer le graphique à barres côte à côte avec légende
+ggplot(volumes_parcelles) +
+  geom_bar(aes(x = ForestPlot, y = VolumeBoisPieds, fill = "Volume de bois sur pieds"), 
+           stat = "identity", position = position_dodge(width = 0.75)) +
+  geom_bar(aes(x = ForestPlot, y = VolumeGrume, fill = "Volume de grume"), 
+           stat = "identity", position = position_dodge(width = 0.75)) +
+  geom_text(aes(x = ForestPlot, y = VolumeGrume, label = paste0(Percentage, "%")),
+            color = "black", size = 3, vjust = 1.5, hjust = 0.5) +
+  labs(title = "Comparaison des volumes de bois sur pieds et de grume en m3 par hectare pour chaque parcelle",
+       x = "Parcelle",
+       y = "Volume en m3/ha",
+       fill = "Légende") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  scale_fill_manual(values = c("Volume de bois sur pieds" = "green", "Volume de grume" = "green4")) +
+  scale_y_continuous(breaks = seq(0, max(volumes_parcelles$VolumeBoisPieds, volumes_parcelles$VolumeGrume), by = 50))  
+
+
+```
+
+#comparaison des pouds en tonne sur poids et en grume en m3 par hectare pour toute les parcelles d'étude, arbres à partir de 10 cm de diamètre 
+```{r}
+
+library(dplyr)
+library(ggplot2)
+
+# Charger les données depuis votre base de données
+data2 <- DataGuyafor_VOLUMES_total 
+
+poids_parcelles <- data2 %>%
+  mutate(PoidsBois = AGB / PlotArea,
+         PoidsGrume = AGB_grume / PlotArea)
+
+# Calculer les poids par hectare par parcelle
+poids_p <- poids_parcelles %>% 
+  group_by(ForestPlot) %>% 
+  summarize(Bois = sum(PoidsBois),
+            Grume = sum(PoidsGrume))
+
+# Arrondir les poids à 0 chiffre après la virgule
+poids_p$Bois <- round(poids_p$Bois, digits = 0)
+poids_p$Grume <- round(poids_p$Grume, digits = 0)
+
+# Calculer les pourcentages
+poids_pourcentage <- poids_p %>%
+  mutate(Percentage = round((Grume / Bois) * 100))
+
+# Créer le graphique à barres côte à côte avec légende
+ggplot(poids_p) +
+  geom_bar(aes(x = ForestPlot, y = Bois, fill = "Poids sur pieds"), 
+           stat = "identity", position = position_dodge(width = 0.75)) +
+  geom_bar(aes(x = ForestPlot, y = Grume, fill = "Poids de grume"), 
+           stat = "identity", position = position_dodge(width = 0.75)) +
+  geom_text(data = poids_pourcentage, aes(x = ForestPlot, y = Grume, label = paste0(Percentage, "%")),
+            color = "black", size = 3, vjust = 1.5, hjust = 0.5) +
+  labs(title = "Comparaison des poids sur pieds et des poids de grume en tonne par hectare pour chaque parcelle",
+       x = "Parcelle",
+       y = "Poids(t/ha)",
+       fill = "Légende") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  scale_fill_manual(values = c("Poids sur pieds" = "blue4", "Poids de grume" = "blue")) +
+  scale_y_continuous(breaks = seq(0, max(poids_p$Bois, poids_p$Grume), by = 50))  # Chiffres tous les 50 sur l'axe des ordonnées
+
+
+```
+
+
+#comparer le volume de grume en m3 par hectare sur chaque parcelle et la fraction de ce volume qui est considéré comme essence commerciales. Pour ça il faut utiliser à nouveau DataGuyafor_VOLUMES_total mais on va juste prendre le volume de grume en faisant la somme des TreeHarvestableVolume_ha et calculer à nouveau ce volume en filtrant et en gardant que les "oui" dans la colonne "Ess_Com" 
+```{r}
+
+library(dplyr)
+library(ggplot2)
+
+# Charger les données depuis votre base de données
+data2 <- DataGuyafor_VOLUMES_total
+
+# Filtrer les données pour garder uniquement les essences commerciales
+volume_grume_ess_com <- data2 %>%
+  filter(Ess_Com == "Oui") %>%
+  group_by(ForestPlot) %>%
+  summarize(VolumeGrumeEssCom = sum(TreeHarvestableVolume_ha))
+
+# Calculer les volumes par hectare par parcelle
+volumes_parcelles_bois_grume <- data2 %>% 
+  group_by(ForestPlot) %>% 
+  summarize(VolumeParHectare = sum(TreeHarvestableVolume_ha))
+
+# Joindre les données des volumes de grume essences commerciales avec les volumes de grume totaux
+comparaison <- left_join(volumes_parcelles_bois_grume, volume_grume_ess_com, by = "ForestPlot")
+
+# Calculer la fraction en pourcentage
+comparaison$FractionEssCom <- (comparaison$VolumeGrumeEssCom / comparaison$VolumeParHectare) * 100
+
+# Créer le graphique
+p <- ggplot(comparaison, aes(x = ForestPlot)) +
+  geom_bar(aes(y = VolumeParHectare, fill = "Volume total de grume"),
+           stat = "identity", position = "dodge") +
+  geom_bar(aes(y = VolumeGrumeEssCom, fill = "Volume de grume essences commerciales"),
+           stat = "identity", position = "dodge") +
+  labs(title = "Comparaison du volume de grume total disponible en m3 par hectare 
+       sur chaque parcelle et de la fraction de grumes d'essences commerciales dans ces volumes",
+       x = "Parcelle",
+       y = "Volume(m3/ha)",
+       fill = "Légende") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  scale_fill_manual(values = c("Volume total de grume" = "green4", "Volume de grume essences commerciales" = "darkorange4")) +
+  scale_y_continuous(breaks = seq(0, max(comparaison$VolumeParHectare, comparaison$VolumeGrumeEssCom) + 100, by = 20))
+
+# Ajouter les pourcentages en petits caractères et en noir en bas des barres bleues
+p + geom_text(aes(y = VolumeGrumeEssCom - 50, label = paste0(round(FractionEssCom), "%")),
+              color = "black", size = 3, angle = 0, vjust = 0.5, hjust = 0.5, show.legend = FALSE)
+
+
+```
+
+#même graphe mais ramené à l'hectare de parcelle défrichable 
+```{r}
+library(dplyr)
+library(ggplot2)
+
+# Charger les données depuis votre base de données
+data2 <- DataGuyafor_VOLUMES_total
+
+# Filtrer les données pour garder uniquement les essences commerciales
+volume_grume_ess_com <- data2 %>%
+  filter(Ess_Com == "Oui") %>%
+  group_by(ForestPlot) %>%
+  summarize(VolumeGrumeEssCom = sum(TreeHarvestableVolume_defrich_ha))
+
+# Calculer les volumes par hectare par parcelle
+volumes_parcelles_bois_grume <- data2 %>% 
+  group_by(ForestPlot) %>% 
+  summarize(VolumeParHectare = sum(TreeHarvestableVolume_defrich_ha))
+
+# Joindre les données des volumes de grume essences commerciales avec les volumes de grume totaux
+comparaison <- left_join(volumes_parcelles_bois_grume, volume_grume_ess_com, by = "ForestPlot")
+
+# Calculer la fraction en pourcentage
+comparaison$FractionEssCom <- (comparaison$VolumeGrumeEssCom / comparaison$VolumeParHectare) * 100
+
+# Créer le graphique
+p <- ggplot(comparaison, aes(x = ForestPlot)) +
+  geom_bar(aes(y = VolumeParHectare, fill = "Volume total de grume"),
+           stat = "identity", position = "dodge") +
+  geom_bar(aes(y = VolumeGrumeEssCom, fill = "Volume de grume essences commerciales"),
+           stat = "identity", position = "dodge") +
+  labs(title = "Comparaison du volume total de grume en m3 par hectare défrichable et de la fraction d'essences commerciales présente  pour chaque  parcelle",
+       x = "Parcelle",
+       y = "Volume(m3/ha)",
+       fill = "Légende") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  scale_fill_manual(values = c("Volume total de grume" = "green4", "Volume de grume essences commerciales" = "darkorange4")) +
+  scale_y_continuous(breaks = seq(0, max(comparaison$VolumeParHectare, comparaison$VolumeGrumeEssCom) + 100, by = 100))
+
+# Ajouter les pourcentages en petits caractères et en noir en bas des barres bleues
+p + geom_text(aes(y = VolumeGrumeEssCom - 50, label = paste0(round(FractionEssCom), "%")),
+              color = "black", size = 3, angle = 0, vjust = 0.5, hjust = 0.5, show.legend = FALSE)
+
+```
+
+
+#idem mais volume d'essences com calculé à partir de 55 cm de diam
+```{r}
+library(dplyr)
+library(ggplot2)
+
+# Charger les données depuis votre base de données
+data2 <- DataGuyafor_VOLUMES_total
+data3 <- DataGuyafor_VOLUMES
+
+
+# Filtrer les données pour garder uniquement les essences commerciales
+volume_grume_ess_com <- data2 %>%
+  filter(Ess_Com == "Oui") %>%
+  group_by(ForestPlot) %>%
+  summarize(VolumeGrumeEssCom = sum(TreeHarvestableVolume_defrich_ha))
+
+# Filtrer les données pour garder uniquement les essences commerciales
+volume_grume_ess_com_55 <- data3 %>%
+  filter(Ess_Com == "Oui") %>%
+  group_by(ForestPlot) %>%
+  summarize(VolumeEssCom = sum(TreeHarvestableVolume_defrich_ha))
+
+# Joindre les deux tableaux pour comparer
+comparaison <- left_join(volume_grume_ess_com, volume_grume_ess_com_55, by = "ForestPlot")
+
+# Calculer la fraction en pourcentage
+comparaison$FractionEssCom <- (comparaison$VolumeEssCom / comparaison$VolumeGrumeEssCom) * 100
+
+# Créer le graphique
+p <- ggplot(comparaison, aes(x = ForestPlot)) +
+  geom_bar(aes(y = VolumeGrumeEssCom, fill = "Volume total de grume d'essences commerciales"),
+           stat = "identity", position = "dodge") +
+  geom_bar(aes(y = VolumeEssCom, fill = "Volume de grume d'essences commerciales à partir de 55 cm de diamètre"),
+           stat = "identity", position = "dodge") +
+  labs(title = "Comparaison du volume de grume total d'essences commerciales 
+       et du volume de grume d'essences commerciales à partir de 55 cm de diamètre en m3 
+       par hectare défrichable par parcelle",
+       x = "Parcelle",
+       y = "Volume (m3/ha)",
+       fill = "Légende") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  scale_fill_manual(values = c("Volume total de grume d'essences commerciales" = "darkorange4", "Volume de grume d'essences commerciales à partir de 55 cm de diamètre" = "darkorange1")) +
+  scale_y_continuous(breaks = seq(0, max(comparaison$VolumeGrumeEssCom, comparaison$VolumeEssCom) + 100, by = 50))
+
+# Ajouter les pourcentages en petits caractères et en noir en bas des barres bleues
+p + geom_text(aes(y = VolumeEssCom - 1, label = paste0(round(FractionEssCom), "%")),
+              color = "black", size = 2.5, angle = 0, vjust = 0.5, hjust = 0.5, show.legend = FALSE)
+
+```
+
+#Comparaison des trois
+```{r}
+# Charger les bibliothèques
+library(dplyr)
+library(ggplot2)
+
+# Charger les données depuis votre base de données
+data2 <- DataGuyafor_VOLUMES_total
+data3 <- DataGuyafor_VOLUMES
+
+# Filtrer les données pour garder uniquement les essences commerciales
+volume_grume_ess_com <- data2 %>%
+  filter(Ess_Com == "Oui") %>%
+  group_by(ForestPlot) %>%
+  summarize(VolumeGrumeEssCom = sum(TreeHarvestableVolume_defrich_ha))
+
+# Filtrer les données pour garder uniquement les essences commerciales
+volume_grume_ess_com_55 <- data3 %>%
+  filter(Ess_Com == "Oui") %>%
+  group_by(ForestPlot) %>%
+  summarize(VolumeEssCom = sum(TreeHarvestableVolume_defrich_ha))
+
+# Calculer le volume total de grume par hectare défrichable
+volume_grume_hec <- data2 %>%
+  group_by(ForestPlot) %>%
+  summarize(VolumeGrumTotal = sum(TreeHarvestableVolume_defrich_ha))
+
+# Joindre les données pour comparer
+comparaison <- left_join(volume_grume_ess_com, volume_grume_ess_com_55, by = "ForestPlot")
+comparaison <- left_join(comparaison, volume_grume_hec, by = "ForestPlot")
+
+# Calculer la fraction en pourcentage
+comparaison$FractionEssCom <- (comparaison$VolumeEssCom / comparaison$VolumeGrumeEssCom) * 100
+
+# Créer le graphique
+p <- ggplot(comparaison, aes(x = ForestPlot)) +
+  geom_bar(aes(y = VolumeGrumeEssCom, fill = "Volume total de grume d'essences commerciales"),
+           stat = "identity", position = "dodge") +
+  geom_bar(aes(y = VolumeEssCom, fill = "Volume de grume d'essences commerciales à partir de 55 cm de diamètre"),
+           stat = "identity", position = "dodge") +
+  geom_bar(aes(y = VolumeGrumTotal, fill = "Volume total de grume par hectare défrichable"),
+           stat = "identity", position = "dodge") +
+  labs(title = "Comparaison du volume de grume total d'essences commerciales 
+       et du volume de grume d'essences commerciales à partir de 55 cm de diamètre en m3 
+       par hectare défrichable par parcelle",
+       x = "Parcelle",
+       y = "Volume (m3/ha)",
+       fill = "Légende") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  scale_fill_manual(values = c("Volume total de grume d'essences commerciales" = "darkorange4", 
+                               "Volume de grume d'essences commerciales à partir de 55 cm de diamètre" = "darkorange1",
+                               "Volume total de grume par hectare défrichable" = "blue")) +
+  scale_y_continuous(breaks = seq(0, max(comparaison$VolumeGrumeEssCom, comparaison$VolumeEssCom, comparaison$VolumeGrumTotal) + 100, by = 50))
+
+# Ajouter les pourcentages en petits caractères et en noir en bas des barres bleues
+p + geom_text(aes(y = VolumeGrumeEssCom - 1, label = paste0(round(FractionEssCom), "%")),
+              color = "black", size = 2.5, angle = 0, vjust = 0.5, hjust = 0.5, show.legend = FALSE)
+
+```
+
+
+#Classe emploi comparaison pour Laussat, Acarouany et 
+```{r}
+# Charger les bibliothèques
+library(dplyr)
+library(ggplot2)
+
+# Charger les données depuis votre base de données
+data2 <- DataGuyafor_VOLUMES_total
+
+# Filtrer les données pour inclure uniquement les parcelles spécifiques
+parcelles_specifiques <- c("Laussat_Laussat", "Acarouany_Javouhey", "Montagne_Plomb_Crique_Plomb")
+data_filtree <- data2 %>% 
+  filter(ForestPlot %in% parcelles_specifiques)
+
+# Calculer les volumes par hectare de parcelle défrichable
+volumes_parcelles_bois_grume <- data_filtree %>% 
+  group_by(ForestPlot) %>% 
+  summarize(VolumeParHectare = sum(TreeHarvestableVolume_defrich_ha))
+
+# Compter le nombre de parcelles dans chaque classe d'emploi
+classe_empoi_counts <- data_filtree %>%
+  group_by(ForestPlot, Classe_Emploi) %>%
+  summarize(Count = n())
+
+# Calculer le pourcentage du volume par classe d'emploi
+classe_empoi_percentages <- classe_empoi_counts %>%
+  group_by(Classe_Emploi) %>%
+  summarize(TotalCount = sum(Count)) %>%
+  mutate(Percentage = (TotalCount / sum(TotalCount)) * 100)
+
+# Créer un graphique à barres empilées pour représenter les pourcentages
+p <- ggplot(classe_empoi_percentages, aes(x = "", y = Percentage, fill = factor(Classe_Emploi))) +
+  geom_bar(stat = "identity", width = 1) +
+  labs(title = "Répartition des volumes par classe d'emploi",
+       x = NULL,
+       y = "Pourcentage") +
+  theme(axis.text.x = element_blank()) +
+  scale_fill_manual(values = c("1" = "green", "2" = "blue", "3" = "red", "4" = "purple", "5" = "orange")) +
+  coord_polar(theta = "y") +
+  geom_text(aes(label = paste0(round(Percentage), "%")), position = position_stack(vjust = 0.5)) +
+  facet_grid(. ~ Classe_Emploi)
+
+# Afficher le graphique
+print(p)
+
+```
+
+
+
+
+
+#pareil mais à l'hectare de parcelle défrichable
+```{r}
+library(dplyr)
+library(ggplot2)
+
+# Charger les données depuis votre base de données
+data2 <- DataGuyafor_VOLUMES_total
+
+# Calculer le volume total de grume en m3 par hectare par parcelle
+volume_grume_parcelles <- data2 %>%
+  group_by(ForestPlot) %>%
+  summarize(VolumeGrume = sum(TreeHarvestableVolume_defrich_ha))
+
+# Filtrer les données pour garder uniquement les essences commerciales
+volume_grume_ess_com <- data2 %>%
+  filter(Ess_Com == "Oui") %>%
+  group_by(ForestPlot) %>%
+  summarize(VolumeGrumeEssCom = sum(TreeHarvestableVolume_defrich_ha))
+
+# Joindre les deux tableaux pour comparer
+comparaison <- left_join(volume_grume_parcelles, volume_grume_ess_com, by = "ForestPlot")
+
+# Calculer la fraction en pourcentage
+comparaison$FractionEssCom <- (comparaison$VolumeGrumeEssCom / comparaison$VolumeGrume) * 100
+
+# Créer le graphique
+p <- ggplot(comparaison, aes(x = ForestPlot)) +
+  geom_bar(aes(y = VolumeGrume, fill = "Volume total de grume"),
+           stat = "identity", position = "dodge") +
+  geom_bar(aes(y = VolumeGrumeEssCom, fill = "Volume de grume essences commerciales"),
+           stat = "identity", position = "dodge") +
+  labs(title = "Comparaison du volume de grume et de la fraction d'essences commerciales présente en m3 
+       par hectare de parcelle défrichable",
+       title.size = 14,
+       x = "Parcelle",
+       y = "Volume en m3 par hectare",
+       fill = "Légende") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  scale_fill_manual(values = c("Volume total de grume" = "green4", "Volume de grume essences commerciales" = "blue")) +
+  scale_color_manual(values = "red") +
+ scale_y_continuous(breaks = seq(0, max(comparaison$VolumeGrume, comparaison$VolumeGrumeEssCom) + 100, by = 100))
+
+
+# Ajouter les pourcentages en petits caractères et en noir en bas des barres bleues
+p + geom_text(aes(y = VolumeGrumeEssCom - 0.5, label = paste(round(FractionEssCom), "%")),
+              color = "black", size = 2.5, angle = 0, vjust = -0.5, hjust = 0.5, show.legend = FALSE)
+```
+
+#55 cm de diam à l'hectare de la parcelle défrichable
+```{r}
+library(dplyr)
+library(ggplot2)
+
+# Charger les données depuis votre base de données
+data2 <- DataGuyafor_VOLUMES_total
+data3 <- DataGuyafor_VOLUMES
+
+# Calculer le volume total de grume en m3 par hectare par parcelle
+volume_grume_parcelles <- data2 %>%
+  group_by(ForestPlot) %>%
+  summarize(VolumeGrume = sum(TreeHarvestableVolume_defrich_ha))
+
+# Filtrer les données pour garder uniquement les essences commerciales
+volume_ess_com <- data3 %>%
+  filter(Ess_Com == "Oui") %>%
+  group_by(ForestPlot) %>%
+  summarize(VolumeEssCom = sum(TreeHarvestableVolume_defrich_ha))
+
+# Joindre les deux tableaux pour comparer
+comparaison <- left_join(volume_grume_parcelles, volume_ess_com, by = "ForestPlot")
+
+# Calculer la fraction en pourcentage
+comparaison$FractionEssCom <- (comparaison$VolumeEssCom / comparaison$VolumeGrume) * 100
+
+# Créer le graphique
+p <- ggplot(comparaison, aes(x = ForestPlot)) +
+  geom_bar(aes(y = VolumeGrume, fill = "Volume total de grume"),
+           stat = "identity", position = "dodge") +
+  geom_bar(aes(y = VolumeEssCom, fill = "Volume d'essences commerciales"),
+           stat = "identity", position = "dodge") +
+  labs(title = "Comparaison du volume de grume total en m3 par hectare par parcelle et de la fraction d'essences commerciales\nprésente à partir de 55 cm de diamètre",
+       title.size = 14,  # Ajuster la taille du titre
+       x = "Parcelle",
+       y = "Volume en m3 par hectare",
+       fill = "Légende") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  scale_fill_manual(values = c("Volume total de grume" = "green4", "Volume d'essences commerciales" = "blue")) +
+  scale_color_manual(values = "red") +
+  scale_y_continuous(breaks = seq(0, max(comparaison$VolumeGrume, comparaison$VolumeGrumeEssCom) + 100, by = 100))
+
+# Ajouter les pourcentages en petits caractères et en noir en bas des barres bleues
+p + geom_text(aes(y = VolumeEssCom - 0.5, label = paste(round(FractionEssCom), "%")),
+              color = "black", size = 2.5, angle = 0, vjust = -0.5, hjust = 0.5, show.legend = FALSE)
+```
+
+
+
+
+
+#Volumes de grume disponible sur chaque parcelle en m3 par hectare dans le cas d'une défriche totale de la parcelle (tous les arbres à partir de 45 cm de diamètre sont pris en compte)
+```{r}
+library(ggplot2)
+library(dplyr)
+
+# Charger les données depuis votre base de données
+data6 <- DataGuyafor_VOLUMESbis
+
+# Calculer les volumes par hectare par parcelle
+volumes_parcelles <- data6 %>% 
+  group_by(ForestPlot) %>% 
+  summarize(VolumeParHectare = sum(TreeHarvestableVolume_ha))
+
+# Arrondir les volumes par hectare à 0 chiffre après la virgule
+volumes_parcelles$VolumeParHectare <- round(volumes_parcelles$VolumeParHectare, digits = 0)
+
+# Créer le graphique à barres avec les étiquettes d'axe des ordonnées adaptées
+ggplot(volumes_parcelles, aes(x = ForestPlot, y = VolumeParHectare)) +
+  geom_bar(stat = "identity", fill = "green4") +
+  geom_text(aes(label = VolumeParHectare), vjust = -0.3, color = "black") +
+  labs(title = "Volume de grume disponible en m3 par hectare pour chaque parcelle d'étude",
+       x = "Parcelle",
+       y = "Volume en m3/ha") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  scale_y_continuous(breaks = scales::pretty_breaks(n = 10))  # Ajustement des intervalles de l'axe des ordonnées
+
+
+```
+
+
+#volumes de grume disponible sur chaque parcelle en m3 par hectare de parcelle défrichable (tous les arbres à partir de 5cm de diamètres)
+```{r}
+library(dplyr)
+library(ggplot2)
+
+# Grouper par parcelle et calculer la somme des volumes
+sum_volumes <- DataGuyafor_VOLUMES_total %>%
+  group_by(ForestPlot) %>%
+  summarise(TotalVolume = sum(TreeHarvestableVolume_defrich_ha, na.rm = TRUE))
+
+# Créer un graphe en bâtons
+ggplot(data = sum_volumes, aes(x = ForestPlot, y = TotalVolume)) +
+  geom_bar(stat = "identity", fill = "green4") +
+  labs(x = "Parcelle", y = "Volume total en m3/ha",
+       title = "Volume de grume d'essences commerciales disponible en m3 par hectare de parcelle défrichable") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+#volumes seulement pour les zones défrichables, les arbres "essences commerciales", les arbres au dessus de 45cm de diamètre donc tout ce qui serait réellement exploitable en bois d’œuvre sur la partie défrichable de la parcelle
+```{r}
+library(dplyr)
+library(ggplot2)
+
+# Grouper par parcelle et calculer la somme des volumes
+sum_volumes <- DataLilou %>%
+  group_by(ForestPlot) %>%
+  summarise(TotalVolume = sum(TreeHarvestableVolume_defrich_ha, na.rm = TRUE))
+
+# Créer un graphe en bâtons
+ggplot(data = sum_volumes, aes(x = ForestPlot, y = TotalVolume)) +
+  geom_bar(stat = "identity", fill = "green4") +
+  labs(x = "Parcelle", y = "Volume total en m3/ha",
+       title = "Volume de grume d'essences commerciales disponible en m3 par hectare de parcelle défrichable") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+
+#comparaison des volumes en m3 par hectare pour trois années de recensement différentes sur les parcelles expoitées (tous les arbres à partir de 5 cm de diamètre)
+```{r}
+# Charger la bibliothèque
+library(dplyr)
+library(ggplot2)
+
+# Supposons que votre base de données s'appelle DataGuyafor_VOLUMESbis
+# Filtrer les données pour ne conserver que les parcelles exploitées
+exploited_parcels <- DataGuyafor_VOLUMESbis %>%
+  filter(Exploitation == "exploitée")
+
+# Regrouper et résumer les données par parcelle, année de recensement (CensusYear) et calculer la somme des volumes
+summary_table <- exploited_parcels %>%
+  group_by(ForestPlot, CensusYear) %>%
+  summarize(TotalVolume = sum(TreeHarvestableVolume_ha))
+
+#graphe
+
+ggplot(summary_table, aes(x = ForestPlot, y = TotalVolume, fill = factor(CensusYear))) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Parcelle", y = "Volume en m3/ha", fill = "Année") +
+  ggtitle("Volume de grume disponible en m3 par hectare par parcelle exploitée en fonction des années") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  geom_text(aes(label = CensusYear), position = position_dodge(width = 0.9), vjust = -0.5, size = 1.8) +
+  theme(legend.position = "none")  # Supprimer la légende des années
+
+```
+
+```{r}
+# Charger la bibliothèque
+library(dplyr)
+library(ggplot2)
+
+# Supposons que votre base de données s'appelle DataGuyafor_VOLUMESbis
+# Filtrer les données pour ne conserver que les parcelles exploitées sauf Paracou_1
+exploited_parcels <- DataGuyafor_VOLUMES_totalbis %>%
+  filter((Exploitation == "exploitée" & ForestPlot %in% c("Paracou_2", "Paracou_3", "Paracou_4")) |
+         (Exploitation == "non exploitée" & ForestPlot == "Paracou_1"))
+
+# Regrouper et résumer les données par parcelle, année de recensement (CensusYear) et calculer la somme des volumes
+summary_table <- exploited_parcels %>%
+  group_by(ForestPlot, CensusYear) %>%
+  summarize(TotalVolume = sum(TreeHarvestableVolume_ha))
+
+# Créer le graphique
+ggplot(summary_table, aes(x = ForestPlot, y = TotalVolume, fill = factor(CensusYear))) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Parcelle", y = "Volume en m3/ha", fill = "Année") +
+  ggtitle("Volume de grume disponible en m3 par hectare par parcelle exploitée en fonction des années") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  geom_text(aes(label = CensusYear), position = position_dodge(width = 0.9), vjust = -0.5, size = 2.5) +
+  theme(legend.position = "none")  # Supprimer la légende des années
+
+```
+
+#comparer les volumes en m3 par hectare de volume global et volume d'essences commerciales seulement sur les parcellees, faire un baton avec des pourcentages
+```{r}
+library(ggplot2)
+library(dplyr)
+
+# Charger les données depuis votre base de données
+data2 <- DataGuyafor_VOLUMES_total
+
+# Calculer les volumes par hectare par parcelle pour toutes les essences
+volumes_parcelles <- data2 %>% 
+  group_by(ForestPlot) %>% 
+  summarize(VolumeParHectare = sum(TreeHarvestableVolume_ha))
+
+# Calculer les volumes par hectare par parcelle pour les essences commerciales uniquement
+volumes_parcelles_com <- data2 %>% 
+  filter(Ess_Com == "Oui") %>% 
+  group_by(ForestPlot) %>% 
+  summarize(VolumeParHectareCom = sum(TreeHarvestableVolume_ha))
+
+# Fusionner les deux ensembles de données
+volumes_parcelles <- left_join(volumes_parcelles, volumes_parcelles_com, by = "ForestPlot")
+
+# Calculer le pourcentage de volume d'essences commerciales par rapport au volume total
+volumes_parcelles <- volumes_parcelles %>%
+  mutate(PercentCom = VolumeParHectareCom / VolumeParHectare * 100)
+
+# Arrondir les volumes par hectare et pourcentage à 0 chiffre après la virgule
+volumes_parcelles$VolumeParHectare <- round(volumes_parcelles$VolumeParHectare, digits = 0)
+volumes_parcelles$VolumeParHectareCom <- round(volumes_parcelles$VolumeParHectareCom, digits = 0)
+volumes_parcelles$PercentCom <- round(volumes_parcelles$PercentCom, digits = 0)
+
+# Créer le graphique à double bâton
+ggplot(volumes_parcelles, aes(x = ForestPlot)) +
+  geom_bar(aes(y = VolumeParHectare, fill = "Toutes les essences"), stat = "identity", position = "dodge") +
+  geom_bar(aes(y = VolumeParHectareCom, fill = "Essences commerciales"), stat = "identity", position = "dodge") +
+  geom_text(aes(y = VolumeParHectareCom + VolumeParHectare * 0.02, label = paste0(PercentCom, "%")), 
+            position = position_dodge(width = 0.9), vjust = -0.5, size = 2.5) +
+  labs(title = "Volume de grume disponible en m3 par hectare pour chaque parcelle d'étude et pourcentage d'essences commerciales disponible dans ce volume",
+       x = "Parcelle",
+       y = "Volume en m3 par hectare",
+       fill = "Légende") +
+  scale_fill_manual(values = c("Toutes les essences" = "green4", "Essences commerciales" = "blue")) +
+  theme(axis.text.x = element_text(angle = 50, hjust = 1)) +
+  coord_cartesian(ylim = c(0, max(volumes_parcelles$VolumeParHectare, volumes_parcelles$VolumeParHectareCom) * 1.1)) +
+  theme(plot.margin = margin(5, 5, 20, 5))
+
+
+```
+
+#volume total de grume d'essences commerciales disponible sur chaque parcelle en m3 par hectare sur la surface défrichable de la parcelle (tous les arbres à partir de 5 cm de diamètre)
+```{r}
+library(dplyr)
+library(ggplot2)
+
+# Grouper par parcelle et calculer la somme des volumes
+sum_volumes <- DataLilou_total %>%
+  group_by(ForestPlot) %>%
+  summarise(TotalVolume = sum(TreeHarvestableVolume_defrich_ha, na.rm = TRUE))
+
+# Créer un graphe en bâtons
+ggplot(data = sum_volumes, aes(x = ForestPlot, y = TotalVolume)) +
+  geom_bar(stat = "identity", fill = "green4") +
+  labs(x = "Parcelle", y = "Volume total (m3/ha)",
+       title = "Volume total de grume d'essences commerciales par parcelle") +
+  theme(axis.text.x = element_text(angle = 50, hjust = 1))
+```
+
+
+```{r}
+
+```
+
+
+#volume total de grume d'essences commerciales à partir de 45 cm de dimètre, disponible sur chaque parcelle en m3 par hectare sur la surface défrichable de la parcelle (résultat final intéressant à exploiter, la fraction de bois commmerciaux en grume seulement sur la partie réellement exploitable de la parcelle)
+```{r}
+library(dplyr)
+library(ggplot2)
+
+# Grouper par parcelle et calculer la somme des volumes
+sum_volumes <- DataLilou %>%
+  group_by(ForestPlot) %>%
+  summarise(TotalVolume = sum(TreeHarvestableVolume_defrich_ha, na.rm = TRUE))
+
+# Créer un graphe en bâtons
+ggplot(data = sum_volumes, aes(x = ForestPlot, y = TotalVolume)) +
+  geom_bar(stat = "identity", fill = "green4") +
+  labs(x = "Parcelle", y = "Volume(m3/ha)",
+       title = "Volume de grume d'essences commerciales en m3 par hectare de 
+       parcelle défrichable calculé pour les arbres à partir de 55 cm de diamètre") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+scale_y_continuous(breaks = seq(0, max(sum_volumes$TotalVolume)+ 50, by = 10))  # Ajustement des intervalles de l'axe des ordonnées
+
+```
+
+#Proportion des classes commerciales sur les volumes en m3 par hectare de parcelle défrichable pour les arbres au dessus de 45 cm de diamètre 
+```{r}
+
+library(tidyverse)
+
+DataLilou$Classe_commerciale <- factor(DataLilou$Classe_commerciale,
+                                       levels = c("AEC", "ECMP", "BP"))
+
+# Liste des parcelles uniques
+parcelles_uniques <- unique(DataLilou$ForestPlot)
+
+# Créer une liste pour stocker les graphiques
+graphes <- list()
+
+# Boucle pour créer les graphes pour chaque parcelle
+for (parcelle in parcelles_uniques) {
+  parcelle_data <- DataLilou %>%
+    filter(ForestPlot == parcelle)
+  
+  volume_classe <- parcelle_data %>%
+    group_by(Classe_commerciale) %>%
+    summarise(Volume_total = sum(TreeHarvestableVolume_defrich_ha))
+  
+  couleurs <- c("AEC" = "blue", "ECMP" = "red", "BP" = "orange")
+  
+  graphe <- ggplot(data = volume_classe,
+                   aes(x = Classe_commerciale, y = Volume_total, fill = Classe_commerciale)) +
+    geom_bar(stat = "identity") +
+    labs(title = paste("Proportions des différentes classes commerciales sur le volume de bois d'essences commerciales pour la parcelle", parcelle),
+         x = "Classe commerciale",
+         y = "Volume (m3/ha)") +
+    scale_fill_manual(values = couleurs, guide = guide_legend(title = NULL)) +
+    theme_minimal() +
+    theme(legend.position = "bottom",
+          plot.title = element_text(size = 7, hjust = 0.4),  # Centrer le titre
+          axis.text.x = element_text(size = 8))  # Modifier la taille du texte de l'axe x
+  
+  graphes[[as.character(parcelle)]] <- graphe
+}
+
+# Afficher les graphes
+for (graphe in graphes) {
+  print(graphe)
+}
+
+```
+
+
+```{r}
+library(tidyverse)
+
+DataLilou$Classe_commerciale <- factor(DataLilou$Classe_commerciale,
+                                       levels = c("AEC", "ECMP", "BP"))
+
+# Filtrer les données pour inclure uniquement les parcelles spécifiques
+parcelles_specifiques <- c("Laussat_Laussat", "Acarouany_Javouhey", "Montagne_Plomb_Crique_plomb")
+parcelles_filtrees <- DataLilou %>%
+  filter(ForestPlot %in% parcelles_specifiques)
+
+# Créer le graphe à barres pour les parcelles spécifiques
+graphe <- parcelles_filtrees %>%
+  group_by(ForestPlot, Classe_commerciale) %>%
+  summarise(Volume_total = sum(TreeHarvestableVolume_defrich_ha)) %>%
+  ggplot(aes(x = Classe_commerciale, y = Volume_total, fill = ForestPlot)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Proportions des différentes classes commerciales sur le volume de grume d'essences commerciales total sur chaque parcelle",
+       x = "Classe commerciale",
+       y = "Volume (m3/ha)") +
+  scale_fill_manual(values = c("Laussat_Laussat" = "blue", "Acarouany_Javouhey" = "red", "Montagne_Plomb_Crique_plomb" = "orange"),
+                    guide = guide_legend(title = NULL)) +
+  theme_minimal() +
+  theme(legend.position = "bottom",
+        plot.title = element_text(size = 7, hjust = 0.4),  # Centrer le titre
+        axis.text.x = element_text(size = 8))  # Modifier la taille du texte de l'axe x
+
+# Afficher le graphe
+print(graphe)
+
+
+
+
+library(tidyverse)
+
+DataLilou$Classe_commerciale <- factor(DataLilou$Classe_commerciale,
+                                       levels = c("AEC", "ECMP", "BP"))
+
+# Filtrer les données pour inclure uniquement les parcelles spécifiques
+parcelles_specifiques <- c("Laussat_Laussat", "Acarouany_Javouhey", "Montagne_Plomb_Crique_plomb")
+parcelles_filtrees <- DataLilou %>%
+  filter(ForestPlot %in% parcelles_specifiques)
+
+# Créer le graphe à barres pour les parcelles spécifiques
+graphe <- parcelles_filtrees %>%
+  group_by(ForestPlot, Classe_commerciale) %>%
+  summarise(Volume_total = sum(TreeHarvestableVolume_defrich_ha)) %>%
+  ggplot(aes(x = ForestPlot, y = Volume_total, fill = Classe_commerciale)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Proportions des différentes classes commerciales sur le volume de bois d'essences commerciales",
+       x = "Parcelle",
+       y = "Volume (m3/ha défrichable)") +
+  scale_fill_manual(values = c("AEC" = "blue", "ECMP" = "red", "BP" = "orange","NA" = "grey"),
+                    guide = guide_legend(title = NULL)) +
+  theme_minimal() +
+  theme(legend.position = "bottom",
+        plot.title = element_text(size = 7, hjust = 0.4),  # Centrer le titre
+        axis.text.x = element_text(size = 8, angle = 45, hjust = 1))  # Modifier la taille et l'angle du texte de l'axe x
+
+# Afficher le graphe
+print(graphe)
+
+
+```
+
+
+
+
+
+#Proportion des classes d'emploi sur les volumes en m3 par hectare de parcelle défrichable pour les arbres au dessus de 45 cm de diamètre 
+```{r}
+
+library(ggplot2)
+library(dplyr)
+
+# Charger les données depuis votre base de données
+data2 <- DataGuyafor_VOLUMES_total
+
+# Liste des parcelles uniques
+parcelles_uniques <- unique(data2$ForestPlot)
+
+# Créer une liste pour stocker les graphiques
+camemberts <- list()
+
+# Boucle pour créer les camemberts pour chaque parcelle
+for (parcelle in parcelles_uniques) {
+  subset_data <- data2 %>%
+    filter(ForestPlot == parcelle)
+  
+  proportions <- subset_data %>%
+    group_by(Classe_Emploi) %>%
+    summarise(Proportion = sum(TreeHarvestableVolume_defrich_ha, na.rm = TRUE) / sum(subset_data$TreeHarvestableVolume_defrich_ha, na.rm = TRUE) * 100)
+  
+  camembert <- ggplot(proportions, aes(x = "", y = Proportion, fill = factor(Classe_Emploi))) +
+    geom_bar(stat = "identity", width = 1) +
+    geom_text(aes(label = paste0(round(Proportion), "%")), position = position_stack(vjust = 0.5), size = 2) +
+    coord_polar("y", start = 0) +
+    labs(title = paste("Proportions des différentes classes d'emploi sur le volume de bois d'essences commerciales pour la parcelle", parcelle),
+         fill = "Classe d'emploi") +
+    scale_fill_manual(values = c("1" = "red", "2" = "blue", "3" = "green", "4" = "purple", "5" = "orange")) +
+    theme_void() +
+    theme(legend.position = "right",
+          plot.title = element_text(size = 8, face = "bold", hjust = 0.4),  # Modifier la taille et le style du titre
+          text = element_text(size = 10))  # Modifier la taille du texte général
+    
+  camemberts[[as.character(parcelle)]] <- camembert
+}
+
+# Afficher les camemberts
+for (camembert in camemberts) {
+  print(camembert)
+}
+
+```
+
+
+#Proportion des classes d'emploi sur les volumes en m3 par hectare de parcelle pour les arbres à partir de 5 cm de diamètre
+```{r}
+
+```
+
+
+
+#LISTE des essences commerciales présentes sur chaque parcelle
+```{r}
+# Charger la bibliothèque
+library(dplyr)
+
+# Utilisation de la fonction group_by() et summarize() pour obtenir la liste unique des noms d'arbres par parcelle
+unique_tree_names <- DataLilou %>%
+  group_by(ForestPlot) %>%
+  summarize(Noms_Arbres_Uniques = unique(Nom_Scientifique))
+
+# Afficher le résultat
+print(unique_tree_names)
+
+```
+
+
+#Liste des essences commerciales avec un diam sup à 45 cm présentes sur la partie défrichable de chaque parcelles et volumes disponibles (en m3) pour chaque espèce 
+```{r}
+library(dplyr)
+
+# Grouper par parcelle et nom d'arbre, calculer la somme des volumes
+tableau_volumes <- DataLilou %>%
+  group_by(ForestPlot, Nom_Scientifique) %>%
+  summarise(Volume_total = sum(TreeHarvestableVolume, na.rm = TRUE))
+
+# Afficher le tableau
+print(tableau_volumes)
+
+```
+
+
+
+#comapraison parcelles paracou (volumes essences commerciales, surface défrichables, 45 cm de diam)
+```{r}
+library(dplyr)
+library(ggplot2)
+
+# Parcelles sélectionnées
+parcelles_selectionnees <- c("Paracou_1", "Paracou_2", "Paracou_3", "Paracou_4")
+
+# Filtrer les données pour les parcelles sélectionnées
+data_filtree <- DataLilou %>%
+  filter(ForestPlot %in% parcelles_selectionnees)
+
+# Grouper par parcelle et calculer la somme des volumes
+sum_volumes <- data_filtree %>%
+  group_by(ForestPlot) %>%
+  summarise(TotalVolume = sum(TreeHarvestableVolume_defrich_ha, na.rm = TRUE))
+
+# Créer un graphe en bâtons
+ggplot(data = sum_volumes, aes(x = ForestPlot, y = TotalVolume)) +
+  geom_bar(stat = "identity", fill = "green4") +
+  labs(x = "Parcelle", y = "Volume (m3/ha)",
+       title = "Volume total de grume d'essences commerciales en m3 par hectare de parcelle") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+```
+```{r}
+
+```
+
+
+
+#volume total de grume sur la parcelle, arbres à partir de 45 cm de diam essences com et autres mélangées, pas de prise en compte de la surface défrichable 
+```{r}
+library(ggplot2)
+library(dplyr)
+
+# Charger les données depuis votre base de données
+data6 <- DataGuyafor_VOLUMESbis
+
+# Parcelles sélectionnées
+parcelles_selectionnees <- c("BAFOG_I", "BAFOG_II", "BAFOG_III", "BAFOG_IV", "BAFOG_V")
+
+# Filtrer les données pour les parcelles sélectionnées
+data_filtree <- data6 %>%
+  filter(ForestPlot %in% parcelles_selectionnees)
+
+# Calculer les volumes par hectare par parcelle
+volumes_parcelles <- data_filtree %>% 
+  group_by(ForestPlot) %>% 
+  summarize(VolumeParHectare = sum(TreeHarvestableVolume_ha))
+
+# Arrondir les volumes par hectare à 0 chiffre après la virgule
+volumes_parcelles$VolumeParHectare <- round(volumes_parcelles$VolumeParHectare, digits = 0)
+
+# Créer le graphique à barres avec les étiquettes d'axe des ordonnées adaptées
+ggplot(volumes_parcelles, aes(x = ForestPlot, y = VolumeParHectare)) +
+  geom_bar(stat = "identity", fill = "green4") +
+  geom_text(aes(label = VolumeParHectare), vjust = -0.3, color = "black") +
+  labs(title = "Volume de grume disponible en m3 par hectare pour chaque parcelle d'étude",
+       x = "Parcelle",
+       y = "Volume en m3/ha") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  scale_y_continuous(breaks = scales::pretty_breaks(n = 10))  # Ajustement des intervalles de l'axe des ordonnées
+
+
+```
+
+
+
+
+#comapraison parcelles paracou (volumes essences commerciales, surface défrichables, 45 cm de diam)
+```{r}
+library(dplyr)
+library(ggplot2)
+
+# Parcelles sélectionnées
+parcelles_selectionnees <- c("BAFOG_I", "BAFOG_II", "BAFOG_III", "BAFOG_IV", "BAFOG_V")
+
+# Filtrer les données pour les parcelles sélectionnées
+data_filtree <- DataLilou %>%
+  filter(ForestPlot %in% parcelles_selectionnees)
+
+# Grouper par parcelle et calculer la somme des volumes
+sum_volumes <- data_filtree %>%
+  group_by(ForestPlot) %>%
+  summarise(TotalVolume = sum(TreeHarvestableVolume_defrich_ha, na.rm = TRUE))
+
+# Créer un graphe en bâtons
+ggplot(data = sum_volumes, aes(x = ForestPlot, y = TotalVolume)) +
+  geom_bar(stat = "identity", fill = "green4") +
+  labs(x = "Parcelle", y = "Volume (m3/ha)",
+       title = "Volume total de grume d'essences commerciales en m3 par hectare de parcelle défrichable") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+library(tidyverse)
+
+# Charger les données
+data <- Tableau_final_des_parcelles
+
+# Filtrer les parcelles d'intérêt
+parcelles_interet <- c("Laussat_Laussat", "Acarouany_Javouhey", "Montagne_Plomb_Crique_Plomb")
+data_filtered <- data %>% filter(Parcelle %in% parcelles_interet)
+
+# Créer le graphique
+ggplot(data_filtered, aes(x = Parcelle, fill = Classe_emploi)) +
+  geom_bar(position = "fill") +
+  labs(title = "Répartition des classes d'emploi par parcelle",
+       x = "Parcelle",
+       y = "Pourcentage") +
+  scale_fill_discrete(name = "Classe d'emploi") +
+  theme_minimal() +
+  theme(legend.position = "top")
+
+
+
+
+
+
+
+
+# Créer le graphique (ajustez "bois_precieux" en fonction de vos critères)
+ggplot(data_filtered, aes(x = Parcelle, y = Volume_total, fill = bois_precieux)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Volume de bois précieux par parcelle",
+       x = "Parcelle",
+       y = "Volume (m3)") +
+  scale_fill_discrete(name = "Bois Précieux") +
+  theme_minimal() +
+  theme(legend.position = "top")
+
+
+
+
+
+
+
+
+
+```
+
+
+
+
+
+```{r}
+
+
+
+library(tidyverse)
+
+
+data <- Tableau_final_des_parcelles # Convertir en data frame
+# Assurez-vous de mettre le bon chemin vers le fichier CSV
+
+graph_empile_emploi <- data %>%
+  group_by(Parcelle, Classe_emploi) %>%
+  summarise(Volume_total = sum(Volumes_de_grume_en_m3, na.rm = TRUE)) %>%
+  ggplot(aes(x = Parcelle, y = Volume_total, fill = Classe_emploi)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Répartition des classes d'emploi par volume de grume commerciale en m3 par parcelle",
+       x = "Parcelle",
+       y = "Volume de grume en m3") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1),  # Rotation des étiquettes à 90 degrés
+        axis.title.y = element_text(margin = margin(t = 0, r = 20)),  # Ajustement de la marge à droite pour l'axe des ordonnées
+        axis.text.y = element_text(size = 8))  # Modification de la taille du texte sur l'axe des ordonnées
+
+print(graph_empile_emploi)
+
+
+# Définir des couleurs spécifiques pour chaque classe d'emploi
+couleurs_classe <- c("1" = "red", "2" = "blue", "3" = "green", "4" = "orange", "5" = "purple")
+
+graph_empile_emploi <- data %>%
+  group_by(Parcelle, Classe_emploi) %>%
+  summarise(Volume_total = sum(Volumes_de_grume_en_m3, na.rm = TRUE)) %>%
+  ggplot(aes(x = Parcelle, y = Volume_total, fill = Classe_emploi)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Répartition des classes d'emploi par volume de grume en m3 par parcelle",
+       x = "Parcelle",
+       y = "Volume de grume en m3") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1),  # Rotation des étiquettes à 90 degrés
+        axis.title.y = element_text(margin = margin(t = 0, r = 20)),  # Ajustement de la marge à droite pour l'axe des ordonnées
+        axis.text.y = element_text(size = 8)) +  # Modification de la taille du texte sur l'axe des ordonnées
+  scale_fill_manual(values = couleurs_classe)  # Définir les couleurs manuellement
+
+# Afficher le graphique empilé pour les classes d'emploi
+print(graph_empile_emploi)
+
+
+
+```
+
+
+
+
+```{r}
+# Assurez-vous d'installer et de charger la bibliothèque ggplot2 si ce n'est pas déjà fait
+# install.packages("ggplot2")
+library(ggplot2)
+
+# Charger votre base de données
+data <- Tableau_final_des_parcelles
+
+# Remplacer les valeurs "NA" par 0 pour les volumes de grumes
+data$Volumes_de_grume_en_m3[is.na(data$Volumes_de_grume_en_m3)] <- 0
+
+# Regrouper les données par Parcelle et Classe_emploi et calculer la somme des volumes
+grouped_data <- aggregate(Volumes_de_grume_en_m3 ~ Parcelle + Classe_emploi, data, sum)
+
+# Créer le graphique en barres empilées avec une échelle logarithmique sur l'axe des ordonnées
+ggplot(grouped_data, aes(x = Parcelle, y = Volumes_de_grume_en_m3, fill = factor(Classe_emploi))) +
+  geom_bar(stat = "identity") +
+  labs(x = "Parcelle", y = "Volume total de grumes (m3)",
+       title = "Répartition des Classe_emploi par parcelle") +
+  scale_fill_discrete(name = "Classe d'emploi") +
+  scale_y_continuous(breaks = seq(0, 1000, by = 50), labels = seq(0, 1000, by = 50)) +  # Échelle avec des breaks personnalisés
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+```
+
+
+
+```{r}
+
+
+
+
+
+
+
+
+
+
+
+
+# Assurez-vous d'installer et de charger la bibliothèque ggplot2 si ce n'est pas déjà fait
+
+  
+  
+  
+  
+  
+  
+  
+  
+# Assurez-vous d'installer et de charger la bibliothèque ggplot2 si ce n'est pas déjà fait
+# install.packages("ggplot2")
+library(ggplot2)
+
+# Charger votre base de données
+data <- Tableau_final_des_parcelles
+
+# Remplacer les valeurs "NA" par 0 pour les volumes de grumes
+data$Volumes_de_grume_en_m3[is.na(data$Volumes_de_grume_en_m3)] <- 0
+
+# Sélectionner uniquement les parcelles spécifiques
+selected_parcelles <- c("Laussat_Laussat", "Montagne_Plomb_Crique_plomb", "Acarouany_Javouhey")
+data_filtered <- subset(data, Parcelle %in% selected_parcelles)
+
+# Regrouper les données par Parcelle et Classe_emploi et calculer la somme des volumes
+grouped_data <- aggregate(Volumes_de_grume_en_m3 ~ Parcelle + Classe_emploi, data_filtered, sum)
+
+# Calculer le pourcentage que chaque classe d'emploi représente sur le total du volume par parcelle
+total_volume_per_parcelle <- aggregate(Volumes_de_grume_en_m3 ~ Parcelle, grouped_data, sum)
+total_volume_per_parcelle <- setNames(total_volume_per_parcelle, c("Parcelle", "Total_volume"))
+grouped_data <- merge(grouped_data, total_volume_per_parcelle, by = "Parcelle")
+grouped_data <- transform(grouped_data, 
+                          Pourcentage = round((Volumes_de_grume_en_m3 / Total_volume) * 100))
+
+# Créer le graphique en barres empilées avec une échelle logarithmique sur l'axe des ordonnées
+ggplot(grouped_data, aes(x = Parcelle, y = Volumes_de_grume_en_m3, fill = factor(Classe_emploi))) +
+  geom_bar(stat = "identity") +
+  labs(x = "Parcelle", y = "Volume total de grumes commerciales de 55 cm de diamètre et plus (m3)",
+       title = "Répartition des classes d'emploi par parcelle") +
+  scale_fill_discrete(name = "Classe d'emploi") +
+  scale_y_discrete(breaks = seq(0, 1000, by = 50), labels = seq(0, 1000, by = 50)) +  # Échelle avec des breaks personnalisés
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  geom_text(aes(label = sprintf("%d%%", Pourcentage)), position = position_stack(vjust = 0.5))
+
+
+
+
+```
+
+```{r}
+# Assurez-vous d'installer et de charger la bibliothèque ggplot2 si ce n'est pas déjà fait
+# install.packages("ggplot2")
+library(ggplot2)
+
+# Charger votre base de données
+data <- Tableau_final_des_parcelles
+
+# Remplacer les valeurs "NA" par 0 pour les volumes de grumes
+data$Volumes_de_grume_en_m3[is.na(data$Volumes_de_grume_en_m3)] <- 0
+
+# Regrouper les données par Parcelle et Classe_emploi et calculer la somme des volumes
+grouped_data <- aggregate(Volumes_de_grume_en_m3 ~ Parcelle + Classe_emploi, data, sum)
+
+# Calculer le pourcentage que chaque classe d'emploi représente sur le total du volume par parcelle
+total_volume_per_parcelle <- aggregate(Volumes_de_grume_en_m3 ~ Parcelle, grouped_data, sum)
+total_volume_per_parcelle <- setNames(total_volume_per_parcelle, c("Parcelle", "Total_volume"))
+grouped_data <- merge(grouped_data, total_volume_per_parcelle, by = "Parcelle")
+grouped_data <- transform(grouped_data, 
+                          Pourcentage = round((Volumes_de_grume_en_m3 / Total_volume) * 100))
+
+# Créer le graphique en barres empilées avec une échelle logarithmique sur l'axe des ordonnées
+ggplot(grouped_data, aes(x = Parcelle, y = Volumes_de_grume_en_m3, fill = factor(Classe_emploi))) +
+  geom_bar(stat = "identity") +
+  labs(x = "Parcelle", y = "Volume total de grumes (m3)",
+       title = "Répartition des Classe_emploi par parcelle") +
+  scale_fill_discrete(name = "Classe d'emploi") +
+  scale_y_discrete(breaks = seq(0, 3000, by = 50), labels = seq(0, 3000, by = 50)) +  # Échelle avec des breaks personnalisés
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  geom_text(aes(label = sprintf("%d%%", Pourcentage)), position = position_stack(vjust = 0.5))
+
+```
+
+
+
+
+
+
+
+
+
+
+```{r}
+# Assurez-vous d'installer et de charger la bibliothèque ggplot2 si ce n'est pas déjà fait
+# install.packages("ggplot2")
+library(ggplot2)
+
+# Charger votre base de données
+data <- Tableau_final_des_parcelles
+
+# Remplacer les valeurs "NA" par 0 pour les volumes de grumes
+data$Volumes_de_grume_en_m3[is.na(data$Volumes_de_grume_en_m3)] <- 0
+
+# Sélectionner uniquement les parcelles spécifiques
+selected_parcelles <- c("Laussat_Laussat", "Montagne_Plomb_Crique_plomb", "Acarouany_Javouhey")
+data_filtered <- subset(data, Parcelle %in% selected_parcelles)
+
+# Regrouper les données par Parcelle et Classe_commerciale et calculer la somme des volumes
+grouped_data <- aggregate(Volumes_de_grume_en_m3 ~ Parcelle + Classe_commerciale, data_filtered, sum)
+
+# Calculer le pourcentage que chaque classe commerciale représente sur le total du volume par parcelle
+total_volume_per_parcelle <- aggregate(Volumes_de_grume_en_m3 ~ Parcelle, grouped_data, sum)
+total_volume_per_parcelle <- setNames(total_volume_per_parcelle, c("Parcelle", "Total_volume"))
+grouped_data <- merge(grouped_data, total_volume_per_parcelle, by = "Parcelle")
+grouped_data <- transform(grouped_data, 
+                          Pourcentage = round((Volumes_de_grume_en_m3 / Total_volume) * 100))
+
+# Créer le graphique en barres empilées avec une échelle logarithmique sur l'axe des ordonnées
+ggplot(grouped_data, aes(x = Parcelle, y = Volumes_de_grume_en_m3, fill = factor(Classe_commerciale))) +
+  geom_bar(stat = "identity") +
+  labs(x = "Parcelle", y = "Volume total de grumes commerciales de 55 cm de diamètre et plus (m3)",
+       title = "Répartition des classes commerciales par parcelle") +
+  scale_fill_discrete(name = "Classe commerciale") +
+  scale_y_discrete(breaks = seq(0, 1000, by = 50), labels = seq(0, 1000, by = 50)) +  # Échelle avec des breaks personnalisés
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  geom_text(aes(label = sprintf("%d%%", Pourcentage)), position = position_stack(vjust = 0.5))
+
+```
+
+
+
+
+```{r}
+# Assurez-vous d'installer et de charger la bibliothèque ggplot2 si ce n'est pas déjà fait
+# install.packages("ggplot2")
+library(ggplot2)
+
+# Charger votre base de données
+data <- Tableau_final_des_parcelles
+
+# Remplacer les valeurs "NA" par 0 pour les volumes de grumes
+data$Volumes_de_grume_en_m3[is.na(data$Volumes_de_grume_en_m3)] <- 0
+
+# Regrouper les données par Parcelle et Classe_commerciale et calculer la somme des volumes
+grouped_data <- aggregate(Volumes_de_grume_en_m3 ~ Parcelle + Classe_commerciale, data, sum)
+
+# Calculer le pourcentage que chaque classe commerciale représente sur le total du volume par parcelle
+total_volume_per_parcelle <- aggregate(Volumes_de_grume_en_m3 ~ Parcelle, grouped_data, sum)
+total_volume_per_parcelle <- setNames(total_volume_per_parcelle, c("Parcelle", "Total_volume"))
+grouped_data <- merge(grouped_data, total_volume_per_parcelle, by = "Parcelle")
+grouped_data <- transform(grouped_data, 
+                          Pourcentage = round((Volumes_de_grume_en_m3 / Total_volume) * 100))
+
+# Créer le graphique en barres empilées avec une échelle logarithmique sur l'axe des ordonnées
+ggplot(grouped_data, aes(x = Parcelle, y = Volumes_de_grume_en_m3, fill = factor(Classe_commerciale))) +
+  geom_bar(stat = "identity") +
+  labs(x = "Parcelle", y = "Volume total de grumes (m3)",
+       title = "Répartition des Classe_commerciale par parcelle") +
+  scale_fill_discrete(name = "Classe commerciale") +
+  scale_y_discrete(breaks = seq(0, 3000, by = 50), labels = seq(0, 3000, by = 50)) +  # Échelle avec des breaks personnalisés
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  geom_text(aes(label = sprintf("%d%%", Pourcentage)), position = position_stack(vjust = 0.5))
+
+```
+
